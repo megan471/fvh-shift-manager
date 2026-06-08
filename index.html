@@ -738,7 +738,8 @@ function renderAdmin(app){
       sel(state.newShift.staffId,[{value:"",label:"Select..."}].concat(recs2.map(function(r){return {value:r.id,label:r.name};})),function(v){state.newShift.staffId=v;},true),
       e("br",{},[]),e("br",{},[]),
       e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Shift type"]),
-      sel(state.newShift.shiftType,SHIFT_TYPES.map(function(t){return {value:t.id,label:t.label+" ("+t.time+")";};}),function(v){state.newShift.shiftType=v;},true),
+      var shiftOptions=[{value:"",label:"Select..."}].concat(SHIFT_TYPES.map(function(t){return {value:t.id,label:t.label+" ("+t.time+")"};}));
+      sel(state.newShift.shiftType,shiftOptions,function(v){state.newShift.shiftType=v;},true),
       e("br",{},[]),e("br",{},[]),
       e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Station"]),
       sel(state.newShift.station,STATIONS,function(v){state.newShift.station=v;},true),

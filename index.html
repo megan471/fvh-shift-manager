@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -407,9 +408,10 @@ function renderRec(app){
   }
 
   if(state.recTab==="week"){
-    var wkStart=new Date(td.getFullYear(),td.getMonth(),td.getDate()+state.wkOff*7);
-    wkStart.setDate(wkStart.getDate()-wkStart.getDay());
-    var wkDays=[];for(var i=0;i<7;i++){var d2=new Date(wkStart);d2.setDate(d2.getDate()+i);wkDays.push(d2);}
+    var wkStart=new Date(td.getFullYear(),td.getMonth(),td.getDate());
+    wkStart.setDate(wkStart.getDate()-wkStart.getDay()+state.wkOff*7);
+    var wkDays=[];
+    for(var wi=0;wi<7;wi++){var wd=new Date(wkStart);wd.setDate(wd.getDate()+wi);wkDays.push(wd);}
     var nav=div({display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px"},[
       btn("prev",false,function(){set("wkOff",state.wkOff-1);}),
       e("span",{style:{fontWeight:"500",flex:"1",textAlign:"center",fontSize:"13px"}},[wkDays[0].toLocaleDateString("en-ZA",{day:"numeric",month:"short"})+" - "+wkDays[6].toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"})]),
@@ -417,22 +419,58 @@ function renderRec(app){
     ]);
     if(state.wkOff!==0)nav.appendChild(btn("Today",false,function(){set("wkOff",0);},{fontSize:"11px"}));
     content.appendChild(nav);
-    var grid=div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"4px"},[]);
-    wkDays.forEach(function(d3){
-      var isT=d3.toDateString()===td.toDateString();
-      var isW=d3.getDay()===0||d3.getDay()===6;
-      var ds=state.shifts.filter(function(s){return s.staffId===uid&&s.day===d3.getDate()&&s.month===d3.getMonth()&&s.year===d3.getFullYear();});
-      var cell=div({borderRadius:"10px",border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:isW?"#faf7ff":"#fff",padding:"6px 4px",minHeight:"90px"},[
-        div({textAlign:"center",marginBottom:"4px"},[
-          e("div",{style:{fontSize:"9px",color:"#888",fontWeight:"500"}},[DAYS[d3.getDay()]]),
-          e("div",{style:{fontSize:"15px",fontWeight:isT?"700":"400",color:isT?"#fff":isW?"#7C3AED":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",margin:"2px auto 0"}},[d3.getDate()+""])
-        ])
-      ]);
-      if(ds.length===0)cell.appendChild(e("div",{style:{fontSize:"9px",color:"#ccc",textAlign:"center",marginTop:"6px"}},{},["—"]));
-      ds.forEach(function(sh){var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);cell.appendChild(div({background:col.bg,color:col.text,borderLeft:"3px solid "+col.border,borderRadius:"4px",padding:"2px 4px",fontSize:"9px",fontWeight:"500",marginBottom:"2px"},[col.label[0]+" "+sh.shiftLabel.split(" ")[0]]));});
+    var grid=div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"4px"});
+    for(var wi2=0;wi2<wkDays.length;wi2++){
+      var d3=wkDays[wi2];
+      var isT2=d3.toDateString()===td.toDateString();
+      var isW2=d3.getDay()===0||d3.getDay()===6;
+      var ds2=state.shifts.filter(function(s){return s.staffId===uid&&s.day===d3.getDate()&&s.month===d3.getMonth()&&s.year===d3.getFullYear();});
+      var cell=div({borderRadius:"10px",border:isT2?"2px solid "+B:"0.5px solid #dde3ee",background:isW2?"#faf7ff":"#fff",padding:"6px 4px",minHeight:"90px"});
+      cell.appendChild(div({textAlign:"center",marginBottom:"4px"},[
+        e("div",{style:{fontSize:"9px",color:"#888",fontWeight:"500"}},[DAYS[d3.getDay()]]),
+        e("div",{style:{fontSize:"15px",fontWeight:isT2?"700":"400",color:isT2?"#fff":isW2?"#7C3AED":"#1a1a2e",background:isT2?B:"transparent",borderRadius:"50%",width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",margin:"2px auto 0"}},[d3.getDate()+""])
+      ]));
+      if(ds2.length===0){cell.appendChild(e("div",{style:{fontSize:"9px",color:"#ccc",textAlign:"center",marginTop:"6px"}},["—"]));}
+      for(var di=0;di<ds2.length;di++){
+        var sh2=ds2[di];
+        var col2=shiftCol(sh2.shiftType,sh2.year,sh2.month,sh2.day);
+        cell.appendChild(div({background:col2.bg,color:col2.text,borderLeft:"3px solid "+col2.border,borderRadius:"4px",padding:"2px 4px",fontSize:"9px",fontWeight:"500",marginBottom:"2px"},[col2.label[0]+" "+sh2.shiftLabel.split(" ")[0]]));
+      }
       grid.appendChild(cell);
-    });
+    }
     content.appendChild(grid);
+    // Week detail below grid
+    var hasAny=false;
+    for(var wi3=0;wi3<wkDays.length;wi3++){
+      var d4=wkDays[wi3];
+      var ds3=state.shifts.filter(function(s){return s.staffId===uid&&s.day===d4.getDate()&&s.month===d4.getMonth()&&s.year===d4.getFullYear();});
+      if(ds3.length===0)continue;
+      hasAny=true;
+      content.appendChild(e("div",{style:{fontSize:"12px",fontWeight:"500",color:"#888",margin:"12px 0 4px"}},[d4.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short"})]));
+      for(var di2=0;di2<ds3.length;di2++){
+        var sh3=ds3[di2];
+        var col3=shiftCol(sh3.shiftType,sh3.year,sh3.month,sh3.day);
+        var ev3=state.clocks.find(function(c){return c.shiftId===sh3.id;});
+        var shRow=cardEl([
+          div({display:"flex",justifyContent:"space-between",alignItems:"center"},[
+            div({},[
+              e("div",{style:{fontSize:"13px",fontWeight:"500",color:col3.text}},[col3.label+" - "+sh3.shiftLabel+" - "+sh3.shiftTime]),
+              e("div",{style:{fontSize:"11px",color:"#888"}},[sh3.station])
+            ]),
+            (function(s,ev){
+              var btns=div({display:"flex",gap:"6px"});
+              if(ev&&ev.approved)btns.appendChild(tag("#0f6e56","Approved"));
+              else if(ev&&ev.clockOut)btns.appendChild(tag("#378add","Pending"));
+              else if(ev&&ev.clockIn)btns.appendChild(btn("Clock Out",false,function(){clockOut(s.id);},{fontSize:"11px"}));
+              else btns.appendChild(btn("Clock In",true,function(){clockIn(s.id);},{fontSize:"11px"}));
+              return btns;
+            })(sh3,ev3)
+          ])
+        ],{borderLeft:"4px solid "+col3.border,marginBottom:"6px"});
+        content.appendChild(shRow);
+      }
+    }
+    if(!hasAny)content.appendChild(e("div",{style:{color:"#888",fontSize:"13px",marginTop:"16px"}},["No shifts this week"]));
   }
 
   if(state.recTab==="month"){

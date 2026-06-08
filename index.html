@@ -754,7 +754,7 @@ function App() {
         {sbMod&&<Modal onClose={function(){setSbMod(null);}}>
           <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add Standby - {new Date(sbMod.year,sbMod.month,sbMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"})}</div>
           <div style={{marginBottom:12}}><label style={ml}>Staff member</label><select style={mi} value={newSb.staffId} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{staffId:e.target.value});});}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
-          <div style={{marginBottom:16}}><label style={ml}>Note (optional)</label><input style={mi} value={newSb.note} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{note:e.target.value}});}}/></div>
+          <div style={{marginBottom:16}}><label style={ml}>Note (optional)</label><input style={mi} value={newSb.note} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{note:e.target.value});});}}/></div>
           <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={addSB}>Confirm</button><button style={mb(false)} onClick={function(){setSbMod(null);}}>Cancel</button></div>
         </Modal>}
 

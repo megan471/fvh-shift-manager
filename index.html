@@ -4,427 +4,343 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FVH Shift Manager</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, sans-serif; background: #f2f4f8; color: #1a1a2e; min-height: 100vh; }
-  #root { max-width: 920px; margin: 0 auto; padding: 20px 16px; }
-  input, select, textarea { font-family: inherit; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f2f4f8; color: #1a1a2e; min-height: 100vh; }
+#root { max-width: 920px; margin: 0 auto; padding: 20px 16px; }
+input, select, textarea { font-family: inherit; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
-  // Firebase init
-  const firebaseConfig = {
-    apiKey: "AIzaSyAeycR2dnoWeKxskAL7L1GA-IjWo4ScThU",
-    authDomain: "fvh-shift-manager.firebaseapp.com",
-    databaseURL: "https://fvh-shift-manager-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "fvh-shift-manager",
-    storageBucket: "fvh-shift-manager.firebasestorage.app",
-    messagingSenderId: "630438354118",
-    appId: "1:630438354118:web:76eb02fecb40475046cbc7"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+firebase.initializeApp({
+  apiKey: "AIzaSyAeycR2dnoWeKxskAL7L1GA-IjWo4ScThU",
+  authDomain: "fvh-shift-manager.firebaseapp.com",
+  databaseURL: "https://fvh-shift-manager-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "fvh-shift-manager",
+  storageBucket: "fvh-shift-manager.firebasestorage.app",
+  messagingSenderId: "630438354118",
+  appId: "1:630438354118:web:76eb02fecb40475046cbc7"
+});
+var db = firebase.database();
 </script>
-<script type="text/babel">
+<script type="text/babel" data-presets="react">
 const { useState, useEffect } = React;
-const FVH_BLUE = "#1e3a6e";
-const FVH_LIGHT = "#e8eef7";
+const B = "#1e3a6e";
 
-const SHIFT_TYPES = [
-  { id: "morning_early", label: "Morning Early", time: "06:00-12:00", category: "morning" },
-  { id: "morning_standard", label: "Morning Standard", time: "06:00-13:00", category: "morning" },
-  { id: "morning_extra", label: "Morning Extra", time: "07:00-11:00", category: "morning" },
-  { id: "morning_730", label: "Morning 07:30", time: "07:00-13:30", category: "morning" },
-  { id: "afternoon_main", label: "Afternoon Main", time: "08:00-16:30", category: "afternoon" },
-  { id: "afternoon_800", label: "Afternoon 08:00", time: "08:00-14:00", category: "afternoon" },
-  { id: "afternoon_extra", label: "Afternoon Extra", time: "09:00-13:00", category: "afternoon" },
-  { id: "afternoon_1000", label: "Afternoon 10:00", time: "10:00-15:00", category: "afternoon" },
-  { id: "night_1100", label: "Night 11:00", time: "11:00-19:30", category: "night" },
-  { id: "night_1130", label: "Night 11:30", time: "11:30-20:00", category: "night" },
-  { id: "night_1200", label: "Night 12:00", time: "12:00-20:30", category: "night" },
-  { id: "night_1300", label: "Night 13:00", time: "13:00-18:00", category: "night" },
-  { id: "night_1330", label: "Night 13:30", time: "13:30-18:30", category: "night" },
-  { id: "night_1400", label: "Night 14:00", time: "14:00-20:00", category: "night" },
-  { id: "night_1500", label: "Night 15:00", time: "15:00-21:00", category: "night" },
-  { id: "night_weekday", label: "Night Weekday", time: "15:30-24:00", category: "night" },
-  { id: "night_weekend", label: "Night Weekend", time: "18:00-24:00", category: "weekend" },
+const SHIFTS = [
+  {id:"morning_early",label:"Morning Early",time:"06:00-12:00",cat:"morning"},
+  {id:"morning_extra",label:"Morning Extra",time:"07:00-11:00",cat:"morning"},
+  {id:"morning_standard",label:"Morning Standard",time:"06:00-13:00",cat:"morning"},
+  {id:"afternoon_main",label:"Afternoon Main",time:"08:00-16:30",cat:"afternoon"},
+  {id:"afternoon_extra",label:"Afternoon Extra",time:"09:00-13:00",cat:"afternoon"},
+  {id:"night_weekday",label:"Night Weekday",time:"15:30-24:00",cat:"night"},
+  {id:"night_weekend",label:"Night Weekend",time:"18:00-24:00",cat:"weekend"},
+  {id:"night_1100",label:"Night 11:00",time:"11:00-19:30",cat:"night"},
+  {id:"night_1130",label:"Night 11:30",time:"11:30-20:00",cat:"night"},
+  {id:"night_1200",label:"Night 12:00",time:"12:00-20:30",cat:"night"},
 ];
 
 const SC = {
-  morning:   { bg: "#FEF3C7", text: "#92400E", border: "#F59E0B", label: "Morning" },
-  afternoon: { bg: "#D1FAE5", text: "#065F46", border: "#10B981", label: "Afternoon" },
-  night:     { bg: "#EDE9FE", text: "#4C1D95", border: "#7C3AED", label: "Night" },
-  weekend:   { bg: "#FFE4E6", text: "#9F1239", border: "#F43F5E", label: "Weekend" },
+  morning:   {bg:"#FEF3C7",text:"#92400E",border:"#F59E0B",label:"Morning"},
+  afternoon: {bg:"#D1FAE5",text:"#065F46",border:"#10B981",label:"Afternoon"},
+  night:     {bg:"#EDE9FE",text:"#4C1D95",border:"#7C3AED",label:"Night"},
+  weekend:   {bg:"#FFE4E6",text:"#9F1239",border:"#F43F5E",label:"Weekend"},
 };
-const SBC = { bg: "#FFF7ED", text: "#7C2D12", border: "#EA580C", label: "Standby" };
+const SBC = {bg:"#FFF7ED",text:"#7C2D12",border:"#EA580C"};
 
-const getShiftColor = (shiftType, year, month, day) => {
-  const dow = new Date(year, month, day).getDay();
-  if (dow === 0 || dow === 6) return SC.weekend;
-  const t = SHIFT_TYPES.find(s => s.id === shiftType);
-  return SC[t ? t.category : "morning"] || SC.morning;
-};
+function shiftColor(type, y, m, d) {
+  const dow = new Date(y,m,d).getDay();
+  if (dow===0||dow===6) return SC.weekend;
+  const t = SHIFTS.find(s=>s.id===type);
+  return SC[t?t.cat:"morning"]||SC.morning;
+}
 
-const STATIONS = ["H - Hospital", "M - Middle", "R - Retail", "R2 - Retail 2", "-"];
+const STATIONS = ["H - Hospital","M - Middle","R - Retail","R2 - Retail 2","-"];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-const MORNING_ROTATION = [
-  ["M - Middle", "R - Retail", "H - Hospital"],
-  ["M - Middle", "R - Retail", "H - Hospital"],
-  ["R - Retail", "H - Hospital", "M - Middle"],
-  ["H - Hospital", "M - Middle", "R - Retail"],
-];
-const AFTERNOON_ROTATION = [
-  ["H - Hospital", "M - Middle", "H - Hospital"],
-  ["H - Hospital", "M - Middle", "H - Hospital"],
-  ["H - Hospital", "R - Retail", "M - Middle"],
-  ["M - Middle", "H - Hospital", "R - Retail"],
-];
-
-const MORNING_STAFF = [
-  { name: "Natasha",  shiftType: "morning_early",  shiftLabel: "Morning Early",  shiftTime: "06:00-12:00" },
-  { name: "Sandy",    shiftType: "morning_extra",  shiftLabel: "Morning Extra",  shiftTime: "07:00-11:00" },
-  { name: "Nicole",   shiftType: "afternoon_main", shiftLabel: "Afternoon Main", shiftTime: "08:00-16:30" },
-];
-const AFTERNOON_STAFF = [
-  { name: "Paige M",  shiftType: "afternoon_main", shiftLabel: "Afternoon 11:00", shiftTime: "11:00-19:30" },
-  { name: "Karrighan",shiftType: "afternoon_main", shiftLabel: "Afternoon 11:30", shiftTime: "11:30-20:00" },
-  { name: "Edith",    shiftType: "afternoon_main", shiftLabel: "Afternoon 12:00", shiftTime: "12:00-20:30" },
+const STAFF0 = [
+  {id:1,name:"Natasha",role:"receptionist",hourlyRate:45,pin:"1111"},
+  {id:2,name:"Sandy",role:"receptionist",hourlyRate:45,pin:"2222"},
+  {id:6,name:"Nicole",role:"receptionist",hourlyRate:45,pin:"6666"},
+  {id:7,name:"Edith",role:"receptionist",hourlyRate:45,pin:"7777"},
+  {id:8,name:"Karrighan",role:"receptionist",hourlyRate:45,pin:"8888"},
+  {id:9,name:"Paige M",role:"receptionist",hourlyRate:45,pin:"9999"},
+  {id:13,name:"Lesa",role:"receptionist",hourlyRate:45,pin:"1013"},
+  {id:14,name:"Taryn C",role:"receptionist",hourlyRate:45,pin:"1014"},
+  {id:15,name:"Taryn V",role:"receptionist",hourlyRate:45,pin:"1015"},
+  {id:17,name:"Marlena",role:"receptionist",hourlyRate:45,pin:"1017"},
+  {id:18,name:"Lebo",role:"receptionist",hourlyRate:45,pin:"1018"},
+  {id:23,name:"Matthew",role:"receptionist",hourlyRate:45,pin:"1023"},
+  {id:24,name:"Vet Login",role:"vet",hourlyRate:0,pin:"0001"},
+  {id:25,name:"Nurse Login",role:"nurse",hourlyRate:0,pin:"0002"},
 ];
 
-const INITIAL_STAFF = [
-  { id: 1,  name: "Natasha",    role: "receptionist", hourlyRate: 45, pin: "1111" },
-  { id: 2,  name: "Sandy",      role: "receptionist", hourlyRate: 45, pin: "2222" },
-  { id: 6,  name: "Nicole",     role: "receptionist", hourlyRate: 45, pin: "6666" },
-  { id: 7,  name: "Edith",      role: "receptionist", hourlyRate: 45, pin: "7777" },
-  { id: 8,  name: "Karrighan",  role: "receptionist", hourlyRate: 45, pin: "8888" },
-  { id: 9,  name: "Paige M",    role: "receptionist", hourlyRate: 45, pin: "9999" },
-  { id: 13, name: "Lesa",       role: "receptionist", hourlyRate: 45, pin: "1013" },
-  { id: 14, name: "Taryn C",    role: "receptionist", hourlyRate: 45, pin: "1014" },
-  { id: 15, name: "Taryn V",    role: "receptionist", hourlyRate: 45, pin: "1015" },
-  { id: 17, name: "Marlena",    role: "receptionist", hourlyRate: 45, pin: "1017" },
-  { id: 18, name: "Lebo",       role: "receptionist", hourlyRate: 45, pin: "1018" },
-  { id: 23, name: "Matthew",    role: "receptionist", hourlyRate: 45, pin: "1023" },
-  { id: 24, name: "Vet Login",  role: "vet",   hourlyRate: 0, pin: "0001" },
-  { id: 25, name: "Nurse Login",role: "nurse", hourlyRate: 0, pin: "0002" },
-];
-
-const VETS = [
-  "Frikkie Strydom","Johan Nel","Neels Du Plessis","Robyn Bester",
-  "Farai Munjere","Estee Van Zyl","Terri Shields","Myra Marais",
-  "Jason Mory","Roland Ryf","Adolf Makotose","Biance Ambrose",
-  "Shria Samson","Aadila Ahmed","Erin Bouwer","Lauren Daisley",
-  "Knowledge Taonezvi"
-];
+const VETS = ["Frikkie Strydom","Johan Nel","Neels Du Plessis","Robyn Bester","Farai Munjere","Estee Van Zyl","Terri Shields","Myra Marais","Jason Mory","Roland Ryf","Adolf Makotose","Biance Ambrose","Shria Samson","Aadila Ahmed","Erin Bouwer","Lauren Daisley","Knowledge Taonezvi"];
 const NURSES = [];
 
-const INITIAL_RULES = [
-  { id: "r1", title: "Standby Protocol", content: "If you are on Standby, please ensure that you are close to home and have everything prepared so that you can arrive ASAP.\n\nIf the standby is needed, you will be notified.\n\nIf you are called in to work, you will be paid for your shift.\n\nThe Standby is there to provide cover in the event of an emergency and for no other reason." },
-  { id: "r2", title: "Lunch Times", content: "Juvanne: 14:00-14:30\nLeandra: 15:30-16:00\nAyanda: 16:00-16:30\nMichelle: 16:30-17:00\nNicole: 18:45-19:15" },
-  { id: "r3", title: "Clock-In Policy", content: "All staff must clock in upon arrival using the digital system. If you are unable to clock in, notify your supervisor immediately.\n\nClock-out must be completed before leaving the premises." },
-  { id: "r4", title: "Shift Swaps", content: "All shift swaps must be arranged through admin only. Do not arrange swaps directly with colleagues without admin approval." },
+const RULES0 = [
+  {id:"r1",title:"Standby Protocol",content:"If you are on Standby, please ensure that you are close to home and have everything prepared so that you can arrive ASAP.\n\nIf the standby is needed, you will be notified.\n\nIf you are called in to work, you will be paid for your shift.\n\nThe Standby is there to provide cover in the event of an emergency and for no other reason."},
+  {id:"r2",title:"Lunch Times",content:"Nicole: 14:00-14:30\nPaige M: 15:30-16:00\nKarrighan: 16:00-16:30\nEdith: 18:45-19:15"},
+  {id:"r3",title:"Clock-In Policy",content:"All staff must clock in upon arrival using the digital system.\n\nClock-out must be completed before leaving the premises."},
+  {id:"r4",title:"Shift Swaps",content:"All shift swaps must be arranged through admin only."},
 ];
 
-const genId = () => Math.random().toString(36).substr(2, 9);
-const calcHours = (i, o) => !i || !o ? 0 : Math.round((new Date(o) - new Date(i)) / 3600000 * 100) / 100;
-const fmtDT = (iso) => !iso ? "-" : new Date(iso).toLocaleString("en-ZA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-const today = new Date();
-const getDaysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-const getFirstDay = (y, m) => new Date(y, m, 1).getDay();
-const ROLE_COLORS = { receptionist: "#1e3a6e", vet: "#0f6e56", nurse: "#993556", admin: "#534AB7" };
-const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const getWeekStart = (date) => { const d = new Date(date); d.setDate(d.getDate() - d.getDay()); return d; };
+const MR = [["M - Middle","R - Retail","H - Hospital"],["M - Middle","R - Retail","H - Hospital"],["R - Retail","H - Hospital","M - Middle"],["H - Hospital","M - Middle","R - Retail"]];
+const AR = [["H - Hospital","M - Middle","H - Hospital"],["H - Hospital","M - Middle","H - Hospital"],["H - Hospital","R - Retail","M - Middle"],["M - Middle","H - Hospital","R - Retail"]];
+const MS = [{name:"Natasha",type:"morning_early",label:"Morning Early",time:"06:00-12:00"},{name:"Sandy",type:"morning_extra",label:"Morning Extra",time:"07:00-11:00"},{name:"Nicole",type:"afternoon_main",label:"Afternoon Main",time:"08:00-16:30"}];
+const AS = [{name:"Paige M",type:"afternoon_main",label:"Afternoon 11:00",time:"11:00-19:30"},{name:"Karrighan",type:"afternoon_main",label:"Afternoon 11:30",time:"11:30-20:00"},{name:"Edith",type:"afternoon_main",label:"Afternoon 12:00",time:"12:00-20:30"}];
 
-const generateRecurringShifts = (month, year, staffList) => {
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+function firstDay(y,m){return new Date(y,m,1).getDay();}
+function genId(){return Math.random().toString(36).substr(2,9);}
+function calcH(i,o){if(!i||!o)return 0;return Math.round((new Date(o)-new Date(i))/3600000*100)/100;}
+function fmt(iso){if(!iso)return"-";return new Date(iso).toLocaleString("en-ZA",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});}
+
+function genRecurring(month, year, staffList) {
   const result = [];
-  const days = getDaysInMonth(year, month);
-  let weekNum = 0;
+  const days = daysInMonth(year, month);
+  let wk = 0;
   for (let day = 1; day <= days; day++) {
     const dow = new Date(year, month, day).getDay();
-    if (dow === 1) weekNum++;
+    if (dow === 1) wk++;
     if (dow === 0 || dow === 6) continue;
-    const wk = Math.min(weekNum, 4) - 1;
-    const mRot = MORNING_ROTATION[Math.max(wk, 0)] || MORNING_ROTATION[0];
-    const aRot = AFTERNOON_ROTATION[Math.max(wk, 0)] || AFTERNOON_ROTATION[0];
-    MORNING_STAFF.forEach((sd, i) => {
-      const member = staffList.find(s => s.name === sd.name);
-      if (!member) return;
-      result.push({ id: genId(), staffId: member.id, day, month, year, shiftType: sd.shiftType, shiftLabel: sd.shiftLabel, shiftTime: sd.shiftTime, station: mRot[i] || "H - Hospital", note: "", recurring: true });
+    const wi = Math.min(wk, 4) - 1;
+    const mr = MR[Math.max(wi,0)] || MR[0];
+    const ar = AR[Math.max(wi,0)] || AR[0];
+    MS.forEach(function(sd, i) {
+      const m = staffList.find(function(s){return s.name===sd.name;});
+      if (!m) return;
+      result.push({id:genId(),staffId:m.id,day,month,year,shiftType:sd.type,shiftLabel:sd.label,shiftTime:sd.time,station:mr[i]||"H - Hospital",note:"",recurring:true});
     });
-    AFTERNOON_STAFF.forEach((sd, i) => {
-      const member = staffList.find(s => s.name === sd.name);
-      if (!member) return;
-      result.push({ id: genId(), staffId: member.id, day, month, year, shiftType: sd.shiftType, shiftLabel: sd.shiftLabel, shiftTime: sd.shiftTime, station: aRot[i] || "M - Middle", note: "", recurring: true });
+    AS.forEach(function(sd, i) {
+      const m = staffList.find(function(s){return s.name===sd.name;});
+      if (!m) return;
+      result.push({id:genId(),staffId:m.id,day,month,year,shiftType:sd.type,shiftLabel:sd.label,shiftTime:sd.time,station:ar[i]||"M - Middle",note:"",recurring:true});
     });
   }
   return result;
-};
+}
+
+const today = new Date();
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loginInput, setLoginInput] = useState({ name: "", pin: "" });
-  const [loginError, setLoginError] = useState("");
-  const [staffState, setStaffState] = useState(INITIAL_STAFF);
+  const [user, setUser] = useState(null);
+  const [loginName, setLoginName] = useState("");
+  const [loginPin, setLoginPin] = useState("");
+  const [loginErr, setLoginErr] = useState("");
+  const [staff, setStaff] = useState(STAFF0);
   const [shifts, setShifts] = useState([]);
   const [standbys, setStandbys] = useState([]);
-  const [clockEvents, setClockEvents] = useState([]);
-  const [rules, setRules] = useState(INITIAL_RULES);
-  const [dbReady, setDbReady] = useState(false);
+  const [clocks, setClocks] = useState([]);
+  const [rules, setRules] = useState(RULES0);
+  const [ready, setReady] = useState(false);
+  const [genMonths, setGenMonths] = useState([]);
   const [adminTab, setAdminTab] = useState("dashboard");
-  const [recepTab, setRecepTab] = useState("overview");
+  const [recTab, setRecTab] = useState("overview");
   const [vetTab, setVetTab] = useState("approvals");
-  const [selectedClinician, setSelectedClinician] = useState(null);
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [shiftModal, setShiftModal] = useState(null);
-  const [standbyModal, setStandbyModal] = useState(null);
-  const [newShift, setNewShift] = useState({ staffId: "", shiftType: "morning_early", station: "H - Hospital", note: "" });
-  const [newStandby, setNewStandby] = useState({ staffId: "", note: "" });
-  const [ruleModal, setRuleModal] = useState(null);
-  const [editRule, setEditRule] = useState({ title: "", content: "" });
-  const [newStaff, setNewStaff] = useState({ name: "", role: "receptionist", hourlyRate: 45, pin: "" });
+  const [clinician, setClinician] = useState(null);
+  const [vm, setVm] = useState(today.getMonth());
+  const [vy, setVy] = useState(today.getFullYear());
+  const [selDay, setSelDay] = useState(null);
+  const [wkOff, setWkOff] = useState(0);
+  const [shiftMod, setShiftMod] = useState(null);
+  const [sbMod, setSbMod] = useState(null);
+  const [reallocMod, setReallocMod] = useState(null);
+  const [ruleMod, setRuleMod] = useState(null);
   const [addStaffOpen, setAddStaffOpen] = useState(false);
-  const [payMonth, setPayMonth] = useState(today.getMonth());
-  const [payYear, setPayYear] = useState(today.getFullYear());
-  const [reallocModal, setReallocModal] = useState(null);
-  const [reallocStaff, setReallocStaff] = useState("");
+  const [payM, setPayM] = useState(today.getMonth());
+  const [payY, setPayY] = useState(today.getFullYear());
+  const [subTab, setSubTab] = useState("roster");
   const [editRateId, setEditRateId] = useState(null);
   const [editRateVal, setEditRateVal] = useState("");
-  const [shiftSubTab, setShiftSubTab] = useState("roster");
-  const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState(null);
-  const [generatedMonths, setGeneratedMonths] = useState([]);
+  const [newShift, setNewShift] = useState({staffId:"",shiftType:"morning_early",station:"H - Hospital",note:""});
+  const [newSb, setNewSb] = useState({staffId:"",note:""});
+  const [newRule, setNewRule] = useState({title:"",content:""});
+  const [newStaff, setNewStaff] = useState({name:"",role:"receptionist",hourlyRate:45,pin:""});
+  const [reallocTo, setReallocTo] = useState("");
 
-  // Firebase listeners
-  useEffect(() => {
-    db.ref("shifts").on("value", snap => { const d = snap.val(); setShifts(d ? Object.values(d) : []); });
-    db.ref("standbys").on("value", snap => { const d = snap.val(); setStandbys(d ? Object.values(d) : []); });
-    db.ref("clockEvents").on("value", snap => { const d = snap.val(); setClockEvents(d ? Object.values(d) : []); });
-    db.ref("rules").on("value", snap => { const d = snap.val(); setRules(d ? Object.values(d) : INITIAL_RULES); });
-    db.ref("staff").on("value", snap => { const d = snap.val(); if (d) setStaffState(Object.values(d)); });
-    db.ref("generatedMonths").on("value", snap => { const d = snap.val(); setGeneratedMonths(d ? Object.values(d) : []); setDbReady(true); });
+  useEffect(function() {
+    db.ref("shifts").on("value", function(s){const d=s.val();setShifts(d?Object.values(d):[]); });
+    db.ref("standbys").on("value", function(s){const d=s.val();setStandbys(d?Object.values(d):[]);});
+    db.ref("clockEvents").on("value", function(s){const d=s.val();setClocks(d?Object.values(d):[]);});
+    db.ref("rules").on("value", function(s){const d=s.val();setRules(d?Object.values(d):RULES0);});
+    db.ref("staff").on("value", function(s){const d=s.val();if(d)setStaff(Object.values(d));});
+    db.ref("genMonths").on("value", function(s){const d=s.val();setGenMonths(d?Object.values(d):[]);setReady(true);});
   }, []);
 
-  // Seed initial data if empty
-  useEffect(() => {
-    if (!dbReady) return;
-    db.ref("staff").once("value").then(snap => {
-      if (!snap.val()) {
-        INITIAL_STAFF.forEach(s => db.ref("staff/" + s.id).set(s));
-      }
+  useEffect(function() {
+    if (!ready) return;
+    db.ref("staff").once("value").then(function(s){if(!s.val()){STAFF0.forEach(function(m){db.ref("staff/"+m.id).set(m);});}});
+    db.ref("rules").once("value").then(function(s){if(!s.val()){RULES0.forEach(function(r){db.ref("rules/"+r.id).set(r);});}});
+  }, [ready]);
+
+  useEffect(function() {
+    if (!ready) return;
+    const key = vm+"-"+vy;
+    if (genMonths.indexOf(key) !== -1) return;
+    const ns = genRecurring(vm, vy, STAFF0);
+    ns.forEach(function(s){db.ref("shifts/"+s.id).set(s);});
+    db.ref("genMonths/"+key.replace("-","_")).set(key);
+  }, [vm, vy, ready]);
+
+  const recs = staff.filter(function(s){return s.role==="receptionist";});
+
+  function login() {
+    const f = staff.find(function(s){return s.name.toLowerCase()===loginName.toLowerCase()&&s.pin===loginPin;});
+    if (f){setUser(f);setLoginErr("");}
+    else if (loginName==="admin"&&loginPin==="admin123"){setUser({id:0,name:"Admin",role:"admin"});setLoginErr("");}
+    else setLoginErr("Incorrect name or PIN.");
+  }
+
+  function logout(){setUser(null);setLoginName("");setLoginPin("");setClinician(null);}
+
+  function dayShifts(d,m,y){return shifts.filter(function(s){return s.day===d&&s.month===m&&s.year===y;});}
+  function daySBs(d,m,y){return standbys.filter(function(s){return s.day===d&&s.month===m&&s.year===y;});}
+  function myShifts(uid){return shifts.filter(function(s){return s.staffId===uid;});}
+  function mySBs(uid){return standbys.filter(function(s){return s.staffId===uid;});}
+
+  function clockIn(shiftId){
+    if(clocks.find(function(c){return c.shiftId===shiftId&&!c.clockOut;}))return;
+    const ev={id:genId(),shiftId,clockIn:new Date().toISOString(),clockOut:null,approved:false};
+    db.ref("clockEvents/"+ev.id).set(ev);
+  }
+  function clockOut(shiftId){
+    const ev=clocks.find(function(c){return c.shiftId===shiftId&&!c.clockOut;});
+    if(ev)db.ref("clockEvents/"+ev.id).update({clockOut:new Date().toISOString()});
+  }
+  function approve(evId,by){db.ref("clockEvents/"+evId).update({approved:true,approvedBy:by});}
+  function delShift(id){db.ref("shifts/"+id).remove();}
+  function delSB(id){db.ref("standbys/"+id).remove();}
+  function delRule(id){db.ref("rules/"+id).remove();}
+  function delStaff(id){db.ref("staff/"+id).remove();}
+
+  function addShift(){
+    if(!newShift.staffId||!shiftMod)return;
+    const t=SHIFTS.find(function(x){return x.id===newShift.shiftType;});
+    const s={id:genId(),staffId:parseInt(newShift.staffId),day:shiftMod.day,month:shiftMod.month,year:shiftMod.year,shiftType:newShift.shiftType,shiftLabel:t.label,shiftTime:t.time,station:newShift.station,note:newShift.note};
+    db.ref("shifts/"+s.id).set(s);
+    setShiftMod(null);setNewShift({staffId:"",shiftType:"morning_early",station:"H - Hospital",note:""});
+  }
+  function addSB(){
+    if(!newSb.staffId||!sbMod)return;
+    const s={id:genId(),staffId:parseInt(newSb.staffId),day:sbMod.day,month:sbMod.month,year:sbMod.year,note:newSb.note};
+    db.ref("standbys/"+s.id).set(s);
+    setSbMod(null);setNewSb({staffId:"",note:""});
+  }
+  function doRealloc(){
+    if(!reallocTo||!reallocMod)return;
+    db.ref("shifts/"+reallocMod.id).update({staffId:parseInt(reallocTo)});
+    setReallocMod(null);setReallocTo("");
+  }
+  function saveRule(){
+    const r=ruleMod==="new"?{id:genId(),...newRule}:{id:ruleMod,...newRule};
+    db.ref("rules/"+r.id).set(r);
+    setRuleMod(null);setNewRule({title:"",content:""});
+  }
+  function saveStaff(){
+    if(!newStaff.name||!newStaff.pin)return;
+    const s={...newStaff,id:Date.now(),hourlyRate:parseFloat(newStaff.hourlyRate)};
+    db.ref("staff/"+s.id).set(s);
+    setAddStaffOpen(false);setNewStaff({name:"",role:"receptionist",hourlyRate:45,pin:""});
+  }
+  function saveRate(id){
+    const v=parseFloat(editRateVal);
+    if(!isNaN(v)&&v>=0)db.ref("staff/"+id).update({hourlyRate:v});
+    setEditRateId(null);setEditRateVal("");
+  }
+
+  function payroll(m,y){
+    return recs.map(function(r){
+      const ms=shifts.filter(function(s){return s.staffId===r.id&&s.month===m&&s.year===y;});
+      let h=0;
+      ms.forEach(function(sh){const ev=clocks.find(function(c){return c.shiftId===sh.id&&c.clockOut;});if(ev)h+=calcH(ev.clockIn,ev.clockOut);});
+      return Object.assign({},r,{hrs:Math.round(h*100)/100,pay:Math.round(h*r.hourlyRate*100)/100,cnt:ms.length});
     });
-    db.ref("rules").once("value").then(snap => {
-      if (!snap.val()) {
-        INITIAL_RULES.forEach(r => db.ref("rules/" + r.id).set(r));
-      }
-    });
-  }, [dbReady]);
+  }
 
-  // Auto-generate recurring shifts for new months
-  useEffect(() => {
-    if (!dbReady) return;
-    const key = viewMonth + "-" + viewYear;
-    if (generatedMonths.includes(key)) return;
-    const newShifts = generateRecurringShifts(viewMonth, viewYear, INITIAL_STAFF);
-    newShifts.forEach(s => db.ref("shifts/" + s.id).set(s));
-    db.ref("generatedMonths/" + key.replace("-", "_")).set(key);
-  }, [viewMonth, viewYear, dbReady]);
+  // Styles
+  const card = {background:"#fff",border:"0.5px solid #dde3ee",borderRadius:12,padding:"14px 16px",marginBottom:10};
+  function btn(a){return {padding:"7px 14px",borderRadius:8,border:"0.5px solid #c8d0e0",cursor:"pointer",fontSize:13,background:a?B:"#f0f3fa",color:a?"#fff":"#1a1a2e",fontWeight:a?500:400};}
+  const mi = {padding:"7px 10px",borderRadius:8,border:"0.5px solid rgba(255,255,255,0.3)",fontSize:13,width:"100%",background:"rgba(255,255,255,0.15)",color:"#fff"};
+  const li = {padding:"7px 10px",borderRadius:8,border:"0.5px solid #c8d0e0",fontSize:13,width:"100%",background:"#f8f9fc",color:"#1a1a2e"};
+  const ml = {fontSize:12,color:"rgba(255,255,255,0.75)",display:"block",marginBottom:4};
+  function mb(p){return {padding:"9px 0",borderRadius:8,border:p?"none":"0.5px solid rgba(255,255,255,0.4)",cursor:"pointer",fontSize:13,background:p?"#fff":"transparent",color:p?B:"#fff",fontWeight:p?600:400,flex:1};}
+  function tag(c){return {display:"inline-block",padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:500,background:c+"22",color:c};}
 
-  const receptionists = staffState.filter(s => s.role === "receptionist");
-
-  const login = () => {
-    const found = staffState.find(s => s.name.toLowerCase() === loginInput.name.toLowerCase() && s.pin === loginInput.pin);
-    if (found) { setCurrentUser(found); setLoginError(""); }
-    else if (loginInput.name === "admin" && loginInput.pin === "admin123") { setCurrentUser({ id: 0, name: "Admin", role: "admin" }); setLoginError(""); }
-    else setLoginError("Incorrect name or PIN. Try again.");
-  };
-
-  const logout = () => { setCurrentUser(null); setLoginInput({ name: "", pin: "" }); setSelectedClinician(null); };
-  const getShiftsForDay = (d, m, y) => shifts.filter(s => s.day === d && s.month === m && s.year === y);
-  const getStandbysForDay = (d, m, y) => standbys.filter(s => s.day === d && s.month === m && s.year === y);
-  const getMyShifts = (uid) => shifts.filter(s => s.staffId === uid);
-  const getMyStandbys = (uid) => standbys.filter(s => s.staffId === uid);
-
-  const clockIn = (shiftId) => {
-    if (clockEvents.find(c => c.shiftId === shiftId && !c.clockOut)) return;
-    const ev = { id: genId(), shiftId, clockIn: new Date().toISOString(), clockOut: null, approved: false };
-    db.ref("clockEvents/" + ev.id).set(ev);
-  };
-  const clockOutFn = (shiftId) => {
-    const ev = clockEvents.find(c => c.shiftId === shiftId && !c.clockOut);
-    if (ev) db.ref("clockEvents/" + ev.id).update({ clockOut: new Date().toISOString() });
-  };
-  const approve = (evId, appId) => db.ref("clockEvents/" + evId).update({ approved: true, approvedBy: appId });
-  const deleteShift = (id) => db.ref("shifts/" + id).remove();
-  const deleteStandby = (id) => db.ref("standbys/" + id).remove();
-  const deleteRuleFn = (id) => db.ref("rules/" + id).remove();
-
-  const addShift = () => {
-    if (!newShift.staffId || !shiftModal) return;
-    const type = SHIFT_TYPES.find(t => t.id === newShift.shiftType);
-    const s = { id: genId(), staffId: parseInt(newShift.staffId), day: shiftModal.day, month: shiftModal.month, year: shiftModal.year, shiftType: newShift.shiftType, shiftLabel: type.label, shiftTime: type.time, station: newShift.station, note: newShift.note };
-    db.ref("shifts/" + s.id).set(s);
-    setShiftModal(null);
-    setNewShift({ staffId: "", shiftType: "morning_early", station: "H - Hospital", note: "" });
-  };
-
-  const addStandby = () => {
-    if (!newStandby.staffId || !standbyModal) return;
-    const s = { id: genId(), staffId: parseInt(newStandby.staffId), day: standbyModal.day, month: standbyModal.month, year: standbyModal.year, note: newStandby.note };
-    db.ref("standbys/" + s.id).set(s);
-    setStandbyModal(null);
-    setNewStandby({ staffId: "", note: "" });
-  };
-
-  const reallocShift = () => {
-    if (!reallocStaff || !reallocModal) return;
-    db.ref("shifts/" + reallocModal.id).update({ staffId: parseInt(reallocStaff) });
-    setReallocModal(null); setReallocStaff("");
-  };
-
-  const saveRuleFn = () => {
-    const r = ruleModal === "new" ? { id: genId(), ...editRule } : { id: ruleModal, ...editRule };
-    db.ref("rules/" + r.id).set(r);
-    setRuleModal(null); setEditRule({ title: "", content: "" });
-  };
-
-  const addStaffMember = () => {
-    if (!newStaff.name || !newStaff.pin) return;
-    const s = { ...newStaff, id: Date.now(), hourlyRate: parseFloat(newStaff.hourlyRate) };
-    db.ref("staff/" + s.id).set(s);
-    setAddStaffOpen(false);
-    setNewStaff({ name: "", role: "receptionist", hourlyRate: 45, pin: "" });
-  };
-
-  const saveRate = (id) => {
-    const val = parseFloat(editRateVal);
-    if (!isNaN(val) && val >= 0) db.ref("staff/" + id).update({ hourlyRate: val });
-    setEditRateId(null); setEditRateVal("");
-  };
-
-  const deleteStaffMember = (id) => {
-    db.ref("staff/" + id).remove();
-  }; = (month, year) => receptionists.map(r => {
-    const ms = shifts.filter(s => s.staffId === r.id && s.month === month && s.year === year);
-    let totalHours = 0;
-    ms.forEach(sh => { const ev = clockEvents.find(c => c.shiftId === sh.id && c.clockOut); if (ev) totalHours += calcHours(ev.clockIn, ev.clockOut); });
-    return { ...r, totalHours: Math.round(totalHours * 100) / 100, totalPay: Math.round(totalHours * r.hourlyRate * 100) / 100, shiftsCount: ms.length };
-  });
-
-  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
-  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
-
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true); setUploadResult(null);
-    try {
-      const isImage = file.type.startsWith("image/");
-      const base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file); });
-      const promptText = `Extract all shift allocations from this shift schedule and return ONLY a JSON array. No preamble, no markdown, no backticks. Just raw JSON. Each object: {"name":"","day":0,"month":0,"year":0,"shiftLabel":"","shiftTime":"","shiftType":"morning_early","station":"H - Hospital","note":""} month is 0-indexed. Return only the JSON array.`;
-      const content = isImage
-        ? [{ type: "image", source: { type: "base64", media_type: file.type, data: base64 } }, { type: "text", text: promptText }]
-        : [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }, { type: "text", text: promptText }];
-      const response = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 4000, messages: [{ role: "user", content }] }) });
-      const data = await response.json();
-      const text = data.content.map(i => i.text || "").join("");
-      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-      const matched = parsed.map(s => { const found = staffState.find(st => st.name.toLowerCase() === s.name.toLowerCase()) || staffState.find(st => st.name.toLowerCase().includes(s.name.toLowerCase())); return { ...s, staffId: found ? found.id : null, staffName: s.name }; });
-      setUploadResult(matched);
-    } catch (err) { setUploadResult({ error: "Could not read the file. Please try again." }); }
-    setUploading(false); e.target.value = "";
-  };
-
-  const confirmUploadShifts = (list) => {
-    list.filter(s => s.staffId).forEach(s => { const sh = { id: genId(), staffId: s.staffId, day: s.day, month: s.month, year: s.year, shiftType: s.shiftType, shiftLabel: s.shiftLabel, shiftTime: s.shiftTime, station: s.station, note: s.note || "" }; db.ref("shifts/" + sh.id).set(sh); });
-    setUploadResult(null);
-  };
-
-  const base = { fontFamily: "system-ui,sans-serif", fontSize: 14, color: "var(--color-text-primary, #1a1a2e)" };
-  const card = { background: "#fff", border: "0.5px solid #dde3ee", borderRadius: 12, padding: "14px 16px", marginBottom: 10 };
-  const btn = (active) => ({ padding: "7px 14px", borderRadius: 8, border: "0.5px solid #c8d0e0", cursor: "pointer", fontSize: 13, background: active ? FVH_BLUE : "#f0f3fa", color: active ? "#fff" : "#1a1a2e", fontWeight: active ? 500 : 400 });
-  const inp = { padding: "7px 10px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.3)", fontSize: 13, width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,0.15)", color: "#fff" };
-  const inpLight = { padding: "7px 10px", borderRadius: 8, border: "0.5px solid #c8d0e0", fontSize: 13, width: "100%", boxSizing: "border-box", background: "#f8f9fc", color: "#1a1a2e" };
-  const inpLabel = { fontSize: 12, color: "rgba(255,255,255,0.75)", display: "block", marginBottom: 4 };
-  const modalBtn = (primary) => ({ padding: "9px 0", borderRadius: 8, border: primary ? "none" : "0.5px solid rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 13, background: primary ? "#fff" : "transparent", color: primary ? FVH_BLUE : "#fff", fontWeight: primary ? 600 : 400, flex: 1 });
-  const tag = (color) => ({ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: color + "22", color });
-
-  const Modal = ({ children, onClose }) => (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
-      <div style={{ background: FVH_BLUE, borderRadius: 14, padding: "20px 24px", width: 360, position: "relative", maxHeight: "85vh", overflowY: "auto" }}>
-        <button onClick={onClose} style={{ position: "absolute", top: 12, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "rgba(255,255,255,0.7)" }}>x</button>
-        {children}
-      </div>
-    </div>
-  );
-
-  const FVHHeader = () => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0 16px", borderBottom: "0.5px solid #dde3ee", marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ background: FVH_BLUE, borderRadius: 8, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>FVH</span>
-        </div>
-        <div>
-          <div style={{ fontWeight: 500, fontSize: 14 }}>Fourways Vet Hospital</div>
-          <div style={{ fontSize: 11, color: "#888" }}>Signed in as <strong>{currentUser.name}</strong> - <span style={{ ...tag(ROLE_COLORS[currentUser.role] || "#888"), fontSize: 10 }}>{currentUser.role}</span></div>
-        </div>
-      </div>
-      <button style={btn(false)} onClick={logout}>Sign out</button>
-    </div>
-  );
-
-  const ShiftBadge = ({ sh, small }) => {
-    const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day);
-    return <div style={{ background: col.bg, color: col.text, borderLeft: "3px solid " + col.border, borderRadius: small ? 4 : 6, padding: small ? "2px 4px" : "5px 8px", fontSize: small ? 9 : 11, fontWeight: 500, marginBottom: 2 }}>{small ? col.label[0] : col.label + " - " + sh.shiftLabel + " " + sh.shiftTime}{!small && sh.station !== "-" ? " - " + sh.station : ""}</div>;
-  };
-  const StandbyBadge = ({ small }) => <div style={{ background: SBC.bg, color: SBC.text, borderLeft: "3px solid " + SBC.border, borderRadius: small ? 4 : 6, padding: small ? "2px 4px" : "5px 8px", fontSize: small ? 9 : 11, fontWeight: 500, marginBottom: 2 }}>{small ? "SB" : "Standby"}</div>;
-
-  if (!dbReady) {
+  function Modal({children,onClose}){
     return (
-      <div style={{ ...base, minHeight: 400, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-        <div style={{ background: FVH_BLUE, borderRadius: 12, width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>FVH</span>
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200}}>
+        <div style={{background:B,borderRadius:14,padding:"20px 24px",width:360,position:"relative",maxHeight:"85vh",overflowY:"auto"}}>
+          <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"none",border:"none",fontSize:20,cursor:"pointer",color:"rgba(255,255,255,0.7)"}}>x</button>
+          {children}
         </div>
-        <div style={{ fontSize: 14, color: "#888" }}>Connecting to database...</div>
       </div>
     );
   }
 
-  if (!currentUser) {
+  function Hdr(){
     return (
-      <div style={{ ...base, minHeight: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 360, background: "#fff", borderRadius: 16, padding: 28, boxShadow: "0 4px 24px rgba(30,58,110,0.12)" }}>
-          <div style={{ background: FVH_BLUE, borderRadius: 10, padding: "24px 20px", textAlign: "center", marginBottom: 24 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.15)", borderRadius: 12, width: 56, height: 56, marginBottom: 12 }}>
-              <span style={{ color: "#fff", fontWeight: 800, fontSize: 20 }}>FVH</span>
-            </div>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>Fourways Vet Hospital</div>
-            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, marginTop: 3 }}>& Specialist Referral Centre</div>
-            <div style={{ marginTop: 10 }}><span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", borderRadius: 20, padding: "3px 14px", fontSize: 11 }}>Reception Shift Manager</span></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{background:B,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{color:"#fff",fontWeight:700,fontSize:13}}>FVH</span>
           </div>
-          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 2 }}>Welcome back</div>
-          <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>Sign in to view your shifts</div>
-          {[["Name","name","text","Your name or admin"],["PIN","pin","password","Enter your PIN"]].map(([label, key, type, ph]) => (
-            <div key={key} style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, color: "#555", display: "block", marginBottom: 4 }}>{label}</label>
-              <input type={type} style={inpLight} placeholder={ph} value={loginInput[key]} onChange={e => setLoginInput(p => ({ ...p, [key]: e.target.value }))} onKeyDown={e => e.key === "Enter" && login()} />
+          <div>
+            <div style={{fontWeight:500,fontSize:14}}>Fourways Vet Hospital</div>
+            <div style={{fontSize:11,color:"#888"}}>Signed in as <strong>{user.name}</strong> - <span style={{...tag("#1e3a6e"),fontSize:10}}>{user.role}</span></div>
+          </div>
+        </div>
+        <button style={btn(false)} onClick={logout}>Sign out</button>
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <div style={{minHeight:400,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+        <div style={{background:B,borderRadius:12,width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{color:"#fff",fontWeight:800,fontSize:16}}>FVH</span>
+        </div>
+        <div style={{fontSize:14,color:"#888"}}>Connecting to database...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div style={{minHeight:500,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{width:360,background:"#fff",borderRadius:16,padding:28,boxShadow:"0 4px 24px rgba(30,58,110,0.12)"}}>
+          <div style={{background:B,borderRadius:10,padding:"24px 20px",textAlign:"center",marginBottom:24}}>
+            <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.15)",borderRadius:12,width:56,height:56,marginBottom:12}}>
+              <span style={{color:"#fff",fontWeight:800,fontSize:20}}>FVH</span>
             </div>
-          ))}
-          {loginError && <div style={{ color: "#c0392b", fontSize: 12, marginBottom: 10 }}>{loginError}</div>}
-          <button style={{ ...btn(true), width: "100%", padding: 11, fontSize: 14 }} onClick={login}>Sign In</button>
-          <div style={{ marginTop: 16, fontSize: 11, color: "#999", textAlign: "center", lineHeight: 1.8 }}>
-            Admin: <strong>admin</strong> / <strong>admin123</strong><br />
-            Vet: <strong>Vet Login</strong> / <strong>0001</strong><br />
+            <div style={{color:"#fff",fontWeight:700,fontSize:18}}>Fourways Vet Hospital</div>
+            <div style={{color:"rgba(255,255,255,0.7)",fontSize:11,marginTop:3}}>&amp; Specialist Referral Centre</div>
+            <div style={{marginTop:10}}><span style={{background:"rgba(255,255,255,0.2)",color:"#fff",borderRadius:20,padding:"3px 14px",fontSize:11}}>Reception Shift Manager</span></div>
+          </div>
+          <div style={{fontWeight:600,fontSize:16,marginBottom:2}}>Welcome back</div>
+          <div style={{fontSize:12,color:"#888",marginBottom:16}}>Sign in to view your shifts</div>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,color:"#555",display:"block",marginBottom:4}}>Name</label>
+            <input style={li} placeholder="Your name or admin" value={loginName} onChange={function(e){setLoginName(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")login();}} />
+          </div>
+          <div style={{marginBottom:14}}>
+            <label style={{fontSize:12,color:"#555",display:"block",marginBottom:4}}>PIN</label>
+            <input type="password" style={li} placeholder="Enter your PIN" value={loginPin} onChange={function(e){setLoginPin(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")login();}} />
+          </div>
+          {loginErr && <div style={{color:"#c0392b",fontSize:12,marginBottom:10}}>{loginErr}</div>}
+          <button style={{...btn(true),width:"100%",padding:11,fontSize:14}} onClick={login}>Sign In</button>
+          <div style={{marginTop:16,fontSize:11,color:"#999",textAlign:"center",lineHeight:1.8}}>
+            Admin: <strong>admin</strong> / <strong>admin123</strong><br/>
+            Vet: <strong>Vet Login</strong> / <strong>0001</strong><br/>
             Nurse: <strong>Nurse Login</strong> / <strong>0002</strong>
           </div>
         </div>
@@ -432,131 +348,106 @@ function App() {
     );
   }
 
-  if (currentUser.role === "receptionist") {
-    const uid = currentUser.id;
-    const myShifts = getMyShifts(uid);
-    const myStandbys = getMyStandbys(uid);
-    const thisMonthShifts = myShifts.filter(s => s.month === today.getMonth() && s.year === today.getFullYear());
-    let totalHours = 0;
-    thisMonthShifts.forEach(sh => { const ev = clockEvents.find(c => c.shiftId === sh.id && c.clockOut); if (ev) totalHours += calcHours(ev.clockIn, ev.clockOut); });
-    const nextShift = myShifts.filter(s => new Date(s.year, s.month, s.day) >= new Date(today.getFullYear(), today.getMonth(), today.getDate())).sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day))[0];
-    const nextEv = nextShift ? clockEvents.find(c => c.shiftId === nextShift.id) : null;
-    const daysInMonth = getDaysInMonth(viewYear, viewMonth);
-    const firstDay = getFirstDay(viewYear, viewMonth);
-    const cells = []; for (let i = 0; i < firstDay; i++) cells.push(null); for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-    const weekStart = getWeekStart(new Date(today.getFullYear(), today.getMonth(), today.getDate() + weekOffset * 7));
-    const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(weekStart); d.setDate(d.getDate() + i); return d; });
+  // ── RECEPTIONIST ──────────────────────────────────────────────
+  if (user.role === "receptionist") {
+    const uid = user.id;
+    const ms = myShifts(uid);
+    const thisMon = ms.filter(function(s){return s.month===today.getMonth()&&s.year===today.getFullYear();});
+    let totH = 0;
+    thisMon.forEach(function(sh){const ev=clocks.find(function(c){return c.shiftId===sh.id&&c.clockOut;});if(ev)totH+=calcH(ev.clockIn,ev.clockOut);});
+    const next = ms.filter(function(s){return new Date(s.year,s.month,s.day)>=new Date(today.getFullYear(),today.getMonth(),today.getDate());}).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);})[0];
+    const nextEv = next?clocks.find(function(c){return c.shiftId===next.id;}):null;
+
+    const dim = daysInMonth(vy,vm);
+    const fd = firstDay(vy,vm);
+    const cells = [];
+    for(let i=0;i<fd;i++)cells.push(null);
+    for(let d=1;d<=dim;d++)cells.push(d);
+
+    const wkStart = new Date(today.getFullYear(),today.getMonth(),today.getDate()+wkOff*7);
+    wkStart.setDate(wkStart.getDate()-wkStart.getDay());
+    const wkDays = [];
+    for(let i=0;i<7;i++){const d=new Date(wkStart);d.setDate(d.getDate()+i);wkDays.push(d);}
 
     return (
-      <div style={{ ...base }}>
-        <FVHHeader />
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 16 }}>
-          {[["overview","Overview"],["week","This Week"],["month","Month"],["hours","Hours"],["rules","Rules"]].map(([id, label]) => <button key={id} style={{ ...btn(recepTab === id), fontSize: 12 }} onClick={() => setRecepTab(id)}>{label}</button>)}
+      <div>
+        <Hdr/>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:16}}>
+          {[["overview","Overview"],["week","This Week"],["month","Month"],["hours","Hours"],["rules","Rules"]].map(function([id,lb]){
+            return <button key={id} style={{...btn(recTab===id),fontSize:12}} onClick={function(){setRecTab(id);}}>{lb}</button>;
+          })}
         </div>
 
-        {recepTab === "overview" && (
+        {recTab==="overview" && (
           <div>
-            <div style={{ background: "linear-gradient(135deg, " + FVH_BLUE + " 0%, #2d5299 100%)", borderRadius: 14, padding: "18px 20px", marginBottom: 16, color: "#fff" }}>
-              <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 4 }}>{today.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>
-              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Good {today.getHours() < 12 ? "morning" : today.getHours() < 17 ? "afternoon" : "evening"}, {currentUser.name.split(" ")[0]}</div>
-              {nextShift ? (
-                <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 4 }}>Your next shift</div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{new Date(nextShift.year, nextShift.month, nextShift.day).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "short" })}</div>
-                  <div style={{ fontSize: 12, opacity: 0.85 }}>{nextShift.shiftLabel} - {nextShift.shiftTime} - {nextShift.station}</div>
-                  {!nextEv && <button style={{ marginTop: 8, background: "#fff", color: FVH_BLUE, border: "none", borderRadius: 7, padding: "5px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }} onClick={() => clockIn(nextShift.id)}>Clock In Now</button>}
-                  {nextEv && !nextEv.clockOut && <button style={{ marginTop: 8, background: "rgba(255,255,255,0.25)", color: "#fff", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 7, padding: "5px 14px", fontSize: 12, cursor: "pointer" }} onClick={() => clockOutFn(nextShift.id)}>Clock Out</button>}
-                  {nextEv && nextEv.approved && <span style={{ marginTop: 8, display: "inline-block", background: "rgba(16,185,129,0.3)", color: "#6ee7b7", borderRadius: 6, padding: "3px 10px", fontSize: 11 }}>Approved</span>}
+            <div style={{background:"linear-gradient(135deg,#1e3a6e 0%,#2d5299 100%)",borderRadius:14,padding:"18px 20px",marginBottom:16,color:"#fff"}}>
+              <div style={{fontSize:13,opacity:0.8,marginBottom:4}}>{today.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
+              <div style={{fontSize:20,fontWeight:600,marginBottom:12}}>Good {today.getHours()<12?"morning":today.getHours()<17?"afternoon":"evening"}, {user.name.split(" ")[0]}</div>
+              {next?(
+                <div style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,opacity:0.75,marginBottom:4}}>Your next shift</div>
+                  <div style={{fontWeight:600,fontSize:14}}>{new Date(next.year,next.month,next.day).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short"})}</div>
+                  <div style={{fontSize:12,opacity:0.85}}>{next.shiftLabel} - {next.shiftTime} - {next.station}</div>
+                  {!nextEv&&<button style={{marginTop:8,background:"#fff",color:B,border:"none",borderRadius:7,padding:"5px 14px",fontSize:12,fontWeight:600,cursor:"pointer"}} onClick={function(){clockIn(next.id);}}>Clock In Now</button>}
+                  {nextEv&&!nextEv.clockOut&&<button style={{marginTop:8,background:"rgba(255,255,255,0.25)",color:"#fff",border:"1px solid rgba(255,255,255,0.4)",borderRadius:7,padding:"5px 14px",fontSize:12,cursor:"pointer"}} onClick={function(){clockOut(next.id);}}>Clock Out</button>}
+                  {nextEv&&nextEv.approved&&<span style={{marginTop:8,display:"inline-block",background:"rgba(16,185,129,0.3)",color:"#6ee7b7",borderRadius:6,padding:"3px 10px",fontSize:11}}>Approved</span>}
                 </div>
-              ) : <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 14px", fontSize: 13, opacity: 0.85 }}>No upcoming shifts</div>}
+              ):<div style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"10px 14px",fontSize:13,opacity:0.85}}>No upcoming shifts</div>}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 16 }}>
-              {[["Shifts this month", thisMonthShifts.length], ["Hours worked", totalHours.toFixed(1)], ["Pending approval", clockEvents.filter(c => { const sh = myShifts.find(s => s.id === c.shiftId); return sh && c.clockOut && !c.approved; }).length]].map(([label, value]) => (
-                <div key={label} style={{ background: "#f0f3fa", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 600, color: FVH_BLUE }}>{value}</div>
-                  <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{label}</div>
-                </div>
-              ))}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
+              {[["Shifts",thisMon.length],["Hours",totH.toFixed(1)],["Pending",clocks.filter(function(c){const sh=ms.find(function(s){return s.id===c.shiftId;});return sh&&c.clockOut&&!c.approved;}).length]].map(function([l,v]){
+                return <div key={l} style={{background:"#f0f3fa",borderRadius:10,padding:"12px 14px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:600,color:B}}>{v}</div><div style={{fontSize:10,color:"#888",marginTop:2}}>{l}</div></div>;
+              })}
             </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-              {Object.values(SC).map(col => <div key={col.label} style={{ background: col.bg, borderRadius: 6, padding: "4px 10px", fontSize: 11, color: col.text, fontWeight: 500 }}>{col.label}</div>)}
-              <div style={{ background: SBC.bg, borderRadius: 6, padding: "4px 10px", fontSize: 11, color: SBC.text, fontWeight: 500 }}>Standby</div>
-            </div>
-            <div style={{ fontWeight: 500, marginBottom: 8, fontSize: 13, color: "#888" }}>UPCOMING SHIFTS</div>
-            {myShifts.filter(s => new Date(s.year, s.month, s.day) >= new Date(today.getFullYear(), today.getMonth(), today.getDate())).sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day)).slice(0, 5).map(sh => {
-              const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day);
-              const ev = clockEvents.find(c => c.shiftId === sh.id);
+            <div style={{fontWeight:500,marginBottom:8,fontSize:13,color:"#888"}}>UPCOMING SHIFTS</div>
+            {ms.filter(function(s){return new Date(s.year,s.month,s.day)>=new Date(today.getFullYear(),today.getMonth(),today.getDate());}).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);}).slice(0,5).map(function(sh){
+              const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);
+              const ev=clocks.find(function(c){return c.shiftId===sh.id;});
               return (
-                <div key={sh.id} style={{ ...card, borderLeft: "4px solid " + col.border }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={sh.id} style={{...card,borderLeft:"4px solid "+col.border}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div>
-                      <div style={{ fontWeight: 500, fontSize: 13 }}>{new Date(sh.year, sh.month, sh.day).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" })}</div>
-                      <div style={{ fontSize: 12, color: col.text }}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div>
-                      <div style={{ fontSize: 11, color: "#888" }}>{sh.station}</div>
+                      <div style={{fontWeight:500,fontSize:13}}>{new Date(sh.year,sh.month,sh.day).toLocaleDateString("en-ZA",{weekday:"short",day:"numeric",month:"short"})}</div>
+                      <div style={{fontSize:12,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div>
+                      <div style={{fontSize:11,color:"#888"}}>{sh.station}</div>
                     </div>
                     <div>
-                      {ev && ev.approved && <span style={tag("#0f6e56")}>Approved</span>}
-                      {ev && ev.clockOut && !ev.approved && <span style={tag("#378add")}>Awaiting</span>}
-                      {ev && ev.clockIn && !ev.clockOut && <button style={{ ...btn(false), fontSize: 11 }} onClick={() => clockOutFn(sh.id)}>Clock Out</button>}
-                      {!ev && <button style={{ ...btn(true), fontSize: 11 }} onClick={() => clockIn(sh.id)}>Clock In</button>}
+                      {ev&&ev.approved&&<span style={tag("#0f6e56")}>Approved</span>}
+                      {ev&&ev.clockOut&&!ev.approved&&<span style={tag("#378add")}>Awaiting</span>}
+                      {ev&&ev.clockIn&&!ev.clockOut&&<button style={{...btn(false),fontSize:11}} onClick={function(){clockOut(sh.id);}}>Clock Out</button>}
+                      {!ev&&<button style={{...btn(true),fontSize:11}} onClick={function(){clockIn(sh.id);}}>Clock In</button>}
                     </div>
                   </div>
                 </div>
               );
             })}
-            {myShifts.filter(s => new Date(s.year, s.month, s.day) >= new Date(today.getFullYear(), today.getMonth(), today.getDate())).length === 0 && <div style={{ color: "#888", fontSize: 13 }}>No upcoming shifts</div>}
-            {myStandbys.filter(s => new Date(s.year, s.month, s.day) >= new Date(today.getFullYear(), today.getMonth(), today.getDate())).length > 0 && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 500, marginBottom: 8, fontSize: 13, color: SBC.text }}>STANDBY DUTIES</div>
-                {myStandbys.filter(s => new Date(s.year, s.month, s.day) >= new Date(today.getFullYear(), today.getMonth(), today.getDate())).sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day)).map(sb => (
-                  <div key={sb.id} style={{ background: SBC.bg, border: "1px solid " + SBC.border, borderRadius: 10, padding: "10px 14px", marginBottom: 8 }}>
-                    <div style={{ fontWeight: 500, fontSize: 13, color: SBC.text }}>Standby - {new Date(sb.year, sb.month, sb.day).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" })}</div>
-                    {sb.note && <div style={{ fontSize: 11, color: SBC.text, opacity: 0.75, marginTop: 2 }}>{sb.note}</div>}
-                    <div style={{ fontSize: 11, color: SBC.text, opacity: 0.7, marginTop: 4 }}>Stay close to home. You will be notified if needed.</div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
-        {recepTab === "week" && (
+        {recTab==="week" && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <button style={btn(false)} onClick={() => setWeekOffset(o => o - 1)}>prev</button>
-              <span style={{ fontWeight: 500, flex: 1, textAlign: "center", fontSize: 13 }}>{weekDays[0].toLocaleDateString("en-ZA", { day: "numeric", month: "short" })} - {weekDays[6].toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}</span>
-              <button style={btn(false)} onClick={() => setWeekOffset(o => o + 1)}>next</button>
-              {weekOffset !== 0 && <button style={{ ...btn(false), fontSize: 11 }} onClick={() => setWeekOffset(0)}>Today</button>}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+              <button style={btn(false)} onClick={function(){setWkOff(function(o){return o-1;});}}>prev</button>
+              <span style={{fontWeight:500,flex:1,textAlign:"center",fontSize:13}}>{wkDays[0].toLocaleDateString("en-ZA",{day:"numeric",month:"short"})} - {wkDays[6].toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"})}</span>
+              <button style={btn(false)} onClick={function(){setWkOff(function(o){return o+1;});}}>next</button>
+              {wkOff!==0&&<button style={{...btn(false),fontSize:11}} onClick={function(){setWkOff(0);}}>Today</button>}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
-              {weekDays.map((d, i) => {
-                const isToday = d.toDateString() === today.toDateString();
-                const isWE = d.getDay() === 0 || d.getDay() === 6;
-                const ds = shifts.filter(s => s.staffId === uid && s.day === d.getDate() && s.month === d.getMonth() && s.year === d.getFullYear());
-                const sbs = standbys.filter(s => s.staffId === uid && s.day === d.getDate() && s.month === d.getMonth() && s.year === d.getFullYear());
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4}}>
+              {wkDays.map(function(d,i){
+                const isT=d.toDateString()===today.toDateString();
+                const isW=d.getDay()===0||d.getDay()===6;
+                const ds=shifts.filter(function(s){return s.staffId===uid&&s.day===d.getDate()&&s.month===d.getMonth()&&s.year===d.getFullYear();});
                 return (
-                  <div key={i} style={{ borderRadius: 10, border: isToday ? "2px solid " + FVH_BLUE : "0.5px solid #dde3ee", background: isWE ? "#faf7ff" : "#fff", padding: "6px 4px", minHeight: 90 }}>
-                    <div style={{ textAlign: "center", marginBottom: 4 }}>
-                      <div style={{ fontSize: 9, color: "#888", fontWeight: 500 }}>{DAY_NAMES[d.getDay()]}</div>
-                      <div style={{ fontSize: 15, fontWeight: isToday ? 700 : 400, color: isToday ? "#fff" : isWE ? "#7C3AED" : "#1a1a2e", background: isToday ? FVH_BLUE : "transparent", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", margin: "2px auto 0" }}>{d.getDate()}</div>
+                  <div key={i} style={{borderRadius:10,border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:isW?"#faf7ff":"#fff",padding:"6px 4px",minHeight:90}}>
+                    <div style={{textAlign:"center",marginBottom:4}}>
+                      <div style={{fontSize:9,color:"#888",fontWeight:500}}>{DAYS[d.getDay()]}</div>
+                      <div style={{fontSize:15,fontWeight:isT?700:400,color:isT?"#fff":isW?"#7C3AED":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",margin:"2px auto 0"}}>{d.getDate()}</div>
                     </div>
-                    {ds.length === 0 && sbs.length === 0 && <div style={{ fontSize: 9, color: "#ccc", textAlign: "center", marginTop: 6 }}>-</div>}
-                    {ds.map(sh => <ShiftBadge key={sh.id} sh={sh} small />)}
-                    {sbs.map(sb => <StandbyBadge key={sb.id} small />)}
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ marginTop: 16 }}>
-              {weekDays.map((d, i) => {
-                const ds = shifts.filter(s => s.staffId === uid && s.day === d.getDate() && s.month === d.getMonth() && s.year === d.getFullYear());
-                const sbs = standbys.filter(s => s.staffId === uid && s.day === d.getDate() && s.month === d.getMonth() && s.year === d.getFullYear());
-                if (!ds.length && !sbs.length) return null;
-                return (
-                  <div key={i} style={{ marginBottom: 10 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "#888", marginBottom: 4 }}>{d.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "short" })}</div>
-                    {ds.map(sh => { const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); const ev = clockEvents.find(c => c.shiftId === sh.id); return <div key={sh.id} style={{ ...card, borderLeft: "4px solid " + col.border, marginBottom: 6 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><div><div style={{ fontSize: 13, fontWeight: 500, color: col.text }}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{ fontSize: 11, color: "#888" }}>{sh.station}</div></div><div>{ev && ev.approved && <span style={tag("#0f6e56")}>Approved</span>}{ev && ev.clockOut && !ev.approved && <span style={tag("#378add")}>Pending</span>}{ev && ev.clockIn && !ev.clockOut && <button style={{ ...btn(false), fontSize: 11 }} onClick={() => clockOutFn(sh.id)}>Clock Out</button>}{!ev && <button style={{ ...btn(true), fontSize: 11 }} onClick={() => clockIn(sh.id)}>Clock In</button>}</div></div></div>; })}
-                    {sbs.map(sb => <div key={sb.id} style={{ background: SBC.bg, border: "1px solid " + SBC.border, borderRadius: 10, padding: "10px 14px", marginBottom: 6 }}><div style={{ fontWeight: 500, fontSize: 13, color: SBC.text }}>Standby</div>{sb.note && <div style={{ fontSize: 11, color: SBC.text, opacity: 0.75 }}>{sb.note}</div>}</div>)}
+                    {ds.length===0&&<div style={{fontSize:9,color:"#ccc",textAlign:"center",marginTop:6}}>-</div>}
+                    {ds.map(function(sh){
+                      const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);
+                      return <div key={sh.id} style={{background:col.bg,color:col.text,borderLeft:"3px solid "+col.border,borderRadius:4,padding:"2px 4px",fontSize:9,fontWeight:500,marginBottom:2}}>{col.label[0]} {sh.shiftLabel.split(" ")[0]}</div>;
+                    })}
                   </div>
                 );
               })}
@@ -564,160 +455,161 @@ function App() {
           </div>
         )}
 
-        {recepTab === "month" && (
+        {recTab==="month" && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <button style={btn(false)} onClick={prevMonth}>prev</button>
-              <span style={{ fontWeight: 600, flex: 1, textAlign: "center", fontSize: 15 }}>{MONTH_NAMES[viewMonth]} {viewYear}</span>
-              <button style={btn(false)} onClick={nextMonth}>next</button>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+              <button style={btn(false)} onClick={function(){if(vm===0){setVm(11);setVy(function(y){return y-1;});}else setVm(function(m){return m-1;});}}>prev</button>
+              <span style={{fontWeight:600,flex:1,textAlign:"center",fontSize:15}}>{MONTHS[vm]} {vy}</span>
+              <button style={btn(false)} onClick={function(){if(vm===11){setVm(0);setVy(function(y){return y+1;});}else setVm(function(m){return m+1;});}}>next</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-              {DAY_NAMES.map(d => <div key={d} style={{ textAlign: "center", fontSize: 10, color: "#888", fontWeight: 600, padding: "4px 0" }}>{d}</div>)}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
+              {DAYS.map(function(d){return <div key={d} style={{textAlign:"center",fontSize:10,color:"#888",fontWeight:600,padding:"4px 0"}}>{d}</div>;})}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3 }}>
-              {cells.map((day, i) => {
-                if (!day) return <div key={i} />;
-                const isToday = day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
-                const isWE = new Date(viewYear, viewMonth, day).getDay() === 0 || new Date(viewYear, viewMonth, day).getDay() === 6;
-                const ds = shifts.filter(s => s.staffId === uid && s.day === day && s.month === viewMonth && s.year === viewYear);
-                const sbs = standbys.filter(s => s.staffId === uid && s.day === day && s.month === viewMonth && s.year === viewYear);
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+              {cells.map(function(day,i){
+                if(!day)return <div key={i}/>;
+                const isT=day===today.getDate()&&vm===today.getMonth()&&vy===today.getFullYear();
+                const ds=shifts.filter(function(s){return s.staffId===uid&&s.day===day&&s.month===vm&&s.year===vy;});
                 return (
-                  <div key={i} onClick={() => (ds.length || sbs.length) && setSelectedDay(selectedDay === day ? null : day)} style={{ minHeight: 60, borderRadius: 8, border: isToday ? "2px solid " + FVH_BLUE : "0.5px solid #dde3ee", background: (ds.length || sbs.length) ? "#fff" : isWE ? "#faf7ff" : "#f8f9fc", padding: 4, cursor: (ds.length || sbs.length) ? "pointer" : "default" }}>
-                    <div style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? "#fff" : "#1a1a2e", background: isToday ? FVH_BLUE : "transparent", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>{day}</div>
-                    {ds.map(sh => <ShiftBadge key={sh.id} sh={sh} small />)}
-                    {sbs.map(sb => <StandbyBadge key={sb.id} small />)}
+                  <div key={i} onClick={function(){if(ds.length)setSelDay(selDay===day?null:day);}} style={{minHeight:60,borderRadius:8,border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:ds.length?"#fff":"#f8f9fc",padding:4,cursor:ds.length?"pointer":"default"}}>
+                    <div style={{fontSize:11,fontWeight:isT?700:400,color:isT?"#fff":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:2}}>{day}</div>
+                    {ds.slice(0,2).map(function(sh){const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{background:col.bg,color:col.text,borderRadius:3,padding:"1px 3px",fontSize:9,marginBottom:1}}>{col.label[0]}</div>;})}
                   </div>
                 );
               })}
             </div>
-            {selectedDay && (() => {
-              const ds = shifts.filter(s => s.staffId === uid && s.day === selectedDay && s.month === viewMonth && s.year === viewYear);
-              const sbs = standbys.filter(s => s.staffId === uid && s.day === selectedDay && s.month === viewMonth && s.year === viewYear);
-              if (!ds.length && !sbs.length) return null;
+            {selDay&&(function(){
+              const ds=shifts.filter(function(s){return s.staffId===uid&&s.day===selDay&&s.month===vm&&s.year===vy;});
+              if(!ds.length)return null;
               return (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontWeight: 500, marginBottom: 8, color: FVH_BLUE }}>{new Date(viewYear, viewMonth, selectedDay).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>
-                  {ds.map(sh => { const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); const ev = clockEvents.find(c => c.shiftId === sh.id); return <div key={sh.id} style={{ ...card, borderLeft: "4px solid " + col.border }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><div><div style={{ fontWeight: 500, color: col.text }}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{ fontSize: 12, color: "#888" }}>{sh.station}</div></div><div>{ev && ev.approved && <span style={tag("#0f6e56")}>Approved</span>}{ev && ev.clockOut && !ev.approved && <span style={tag("#378add")}>Pending</span>}{ev && ev.clockIn && !ev.clockOut && <button style={{ ...btn(false), fontSize: 12 }} onClick={() => clockOutFn(sh.id)}>Clock Out</button>}{!ev && <button style={{ ...btn(true), fontSize: 12 }} onClick={() => clockIn(sh.id)}>Clock In</button>}</div></div>{ev && <div style={{ marginTop: 6, fontSize: 11, color: "#888" }}>{ev.clockIn && "In: " + fmtDT(ev.clockIn)}{ev.clockOut && " - Out: " + fmtDT(ev.clockOut) + " - " + calcHours(ev.clockIn, ev.clockOut).toFixed(2) + "h"}</div>}</div>; })}
-                  {sbs.map(sb => <div key={sb.id} style={{ background: SBC.bg, border: "1px solid " + SBC.border, borderRadius: 10, padding: "10px 14px" }}><div style={{ fontWeight: 500, color: SBC.text }}>Standby</div>{sb.note && <div style={{ fontSize: 12, color: SBC.text }}>{sb.note}</div>}</div>)}
+                <div style={{marginTop:16}}>
+                  <div style={{fontWeight:500,marginBottom:8,color:B}}>{new Date(vy,vm,selDay).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
+                  {ds.map(function(sh){
+                    const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);
+                    const ev=clocks.find(function(c){return c.shiftId===sh.id;});
+                    return (
+                      <div key={sh.id} style={{...card,borderLeft:"4px solid "+col.border}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div><div style={{fontWeight:500,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{fontSize:12,color:"#888"}}>{sh.station}</div></div>
+                          <div>
+                            {ev&&ev.approved&&<span style={tag("#0f6e56")}>Approved</span>}
+                            {ev&&ev.clockOut&&!ev.approved&&<span style={tag("#378add")}>Pending</span>}
+                            {ev&&ev.clockIn&&!ev.clockOut&&<button style={{...btn(false),fontSize:12}} onClick={function(){clockOut(sh.id);}}>Clock Out</button>}
+                            {!ev&&<button style={{...btn(true),fontSize:12}} onClick={function(){clockIn(sh.id);}}>Clock In</button>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}
-            <div style={{ marginTop: 16, background: "#f8f9fc", borderRadius: 12, padding: "14px 16px" }}>
-              <div style={{ fontWeight: 500, marginBottom: 10 }}>Month summary</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(70px,1fr))", gap: 8 }}>
-                {Object.values(SC).map(col => { const count = shifts.filter(s => s.staffId === uid && s.month === viewMonth && s.year === viewYear && getShiftColor(s.shiftType, s.year, s.month, s.day) === col).length; return <div key={col.label} style={{ background: col.bg, borderRadius: 8, padding: "8px 10px", textAlign: "center" }}><div style={{ fontSize: 18, fontWeight: 600, color: col.text }}>{count}</div><div style={{ fontSize: 9, color: col.text, opacity: 0.8 }}>{col.label}</div></div>; })}
-                <div style={{ background: SBC.bg, borderRadius: 8, padding: "8px 10px", textAlign: "center" }}><div style={{ fontSize: 18, fontWeight: 600, color: SBC.text }}>{standbys.filter(s => s.staffId === uid && s.month === viewMonth && s.year === viewYear).length}</div><div style={{ fontSize: 9, color: SBC.text, opacity: 0.8 }}>Standby</div></div>
-              </div>
-            </div>
           </div>
         )}
 
-        {recepTab === "hours" && (
+        {recTab==="hours" && (
           <div>
-            <div style={{ fontWeight: 500, marginBottom: 12 }}>Hours this month</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-              {[["Shifts allocated", thisMonthShifts.length], ["Hours worked", totalHours.toFixed(2)]].map(([label, val]) => <div key={label} style={{ background: "#f0f3fa", borderRadius: 8, padding: "12px 14px" }}><div style={{ fontSize: 11, color: "#888" }}>{label}</div><div style={{ fontSize: 26, fontWeight: 500, color: FVH_BLUE }}>{val}</div></div>)}
+            <div style={{fontWeight:500,marginBottom:12}}>Hours this month</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              <div style={{background:"#f0f3fa",borderRadius:8,padding:"12px 14px"}}><div style={{fontSize:11,color:"#888"}}>Shifts</div><div style={{fontSize:26,fontWeight:500,color:B}}>{thisMon.length}</div></div>
+              <div style={{background:"#f0f3fa",borderRadius:8,padding:"12px 14px"}}><div style={{fontSize:11,color:"#888"}}>Hours worked</div><div style={{fontSize:26,fontWeight:500,color:B}}>{totH.toFixed(2)}</div></div>
             </div>
             <div style={card}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead><tr style={{ borderBottom: "0.5px solid #dde3ee" }}>{["Date","Shift","In","Out","Hours","Status"].map(h => <th key={h} style={{ textAlign: "left", padding: "6px 8px", fontSize: 11, color: "#888", fontWeight: 500 }}>{h}</th>)}</tr></thead>
-                <tbody>{thisMonthShifts.map(sh => { const ev = clockEvents.find(c => c.shiftId === sh.id); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); return <tr key={sh.id} style={{ borderBottom: "0.5px solid #eee" }}><td style={{ padding: "7px 8px" }}>{new Date(sh.year, sh.month, sh.day).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}</td><td style={{ padding: "7px 8px", fontSize: 12, color: col.text }}>{sh.shiftLabel}</td><td style={{ padding: "7px 8px", fontSize: 11 }}>{ev && ev.clockIn ? fmtDT(ev.clockIn) : "-"}</td><td style={{ padding: "7px 8px", fontSize: 11 }}>{ev && ev.clockOut ? fmtDT(ev.clockOut) : "-"}</td><td style={{ padding: "7px 8px" }}>{ev && ev.clockOut ? calcHours(ev.clockIn, ev.clockOut).toFixed(2) : "-"}</td><td style={{ padding: "7px 8px" }}>{ev && ev.approved ? <span style={tag("#0f6e56")}>Approved</span> : ev && ev.clockOut ? <span style={tag("#378add")}>Pending</span> : <span style={{ color: "#aaa", fontSize: 11 }}>-</span>}</td></tr>; })}</tbody>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <thead><tr style={{borderBottom:"0.5px solid #dde3ee"}}>{["Date","Shift","In","Out","Hours","Status"].map(function(h){return <th key={h} style={{textAlign:"left",padding:"6px 8px",fontSize:11,color:"#888",fontWeight:500}}>{h}</th>;})}</tr></thead>
+                <tbody>{thisMon.map(function(sh){const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <tr key={sh.id} style={{borderBottom:"0.5px solid #eee"}}><td style={{padding:"7px 8px"}}>{new Date(sh.year,sh.month,sh.day).toLocaleDateString("en-ZA",{day:"numeric",month:"short"})}</td><td style={{padding:"7px 8px",fontSize:12,color:col.text}}>{sh.shiftLabel}</td><td style={{padding:"7px 8px",fontSize:11}}>{ev&&ev.clockIn?fmt(ev.clockIn):"-"}</td><td style={{padding:"7px 8px",fontSize:11}}>{ev&&ev.clockOut?fmt(ev.clockOut):"-"}</td><td style={{padding:"7px 8px"}}>{ev&&ev.clockOut?calcH(ev.clockIn,ev.clockOut).toFixed(2):"-"}</td><td style={{padding:"7px 8px"}}>{ev&&ev.approved?<span style={tag("#0f6e56")}>Approved</span>:ev&&ev.clockOut?<span style={tag("#378add")}>Pending</span>:<span style={{color:"#aaa",fontSize:11}}>-</span>}</td></tr>;})}</tbody>
               </table>
             </div>
           </div>
         )}
 
-        {recepTab === "rules" && (
+        {recTab==="rules" && (
           <div>
-            <div style={{ fontWeight: 500, marginBottom: 12 }}>Rules and Protocols</div>
-            {rules.map(r => <div key={r.id} style={{ ...card, borderLeft: "4px solid " + FVH_BLUE }}><div style={{ fontWeight: 500, marginBottom: 6, color: FVH_BLUE }}>{r.title}</div><div style={{ fontSize: 13, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{r.content}</div></div>)}
+            <div style={{fontWeight:500,marginBottom:12}}>Rules and Protocols</div>
+            {rules.map(function(r){return <div key={r.id} style={{...card,borderLeft:"4px solid "+B}}><div style={{fontWeight:500,marginBottom:6,color:B}}>{r.title}</div><div style={{fontSize:13,whiteSpace:"pre-wrap",lineHeight:1.6}}>{r.content}</div></div>;})}
           </div>
         )}
       </div>
     );
   }
 
-  if (currentUser.role === "admin") {
-    const payData = getPayrollData(payMonth, payYear);
-    const payMonthName = new Date(payYear, payMonth, 1).toLocaleString("en-ZA", { month: "long", year: "numeric" });
-    const todayShifts = getShiftsForDay(today.getDate(), today.getMonth(), today.getFullYear());
-    const pendingApprovals = clockEvents.filter(c => c.clockOut && !c.approved).length;
-    const sortedShifts = shifts.slice().sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day));
+  // ── ADMIN ─────────────────────────────────────────────────────
+  if (user.role === "admin") {
+    const pd = payroll(payM, payY);
+    const pmn = new Date(payY,payM,1).toLocaleString("en-ZA",{month:"long",year:"numeric"});
+    const tds = dayShifts(today.getDate(),today.getMonth(),today.getFullYear());
+    const pend = clocks.filter(function(c){return c.clockOut&&!c.approved;}).length;
+
+    const sorted = shifts.slice().sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);});
     const grouped = {};
-    sortedShifts.forEach(sh => { const key = sh.year + "-" + sh.month + "-" + sh.day; if (!grouped[key]) grouped[key] = { year: sh.year, month: sh.month, day: sh.day, shifts: [] }; grouped[key].shifts.push(sh); });
-    standbys.forEach(sb => { const key = sb.year + "-" + sb.month + "-" + sb.day; if (!grouped[key]) grouped[key] = { year: sb.year, month: sb.month, day: sb.day, shifts: [] }; });
-    const daysInMonth = getDaysInMonth(viewYear, viewMonth);
-    const firstDay = getFirstDay(viewYear, viewMonth);
-    const calCells = []; for (let i = 0; i < firstDay; i++) calCells.push(null); for (let d = 1; d <= daysInMonth; d++) calCells.push(d);
+    sorted.forEach(function(sh){const k=sh.year+"-"+sh.month+"-"+sh.day;if(!grouped[k])grouped[k]={year:sh.year,month:sh.month,day:sh.day,shifts:[]};grouped[k].shifts.push(sh);});
+    standbys.forEach(function(sb){const k=sb.year+"-"+sb.month+"-"+sb.day;if(!grouped[k])grouped[k]={year:sb.year,month:sb.month,day:sb.day,shifts:[]};});
+
+    const dim=daysInMonth(vy,vm);const fd2=firstDay(vy,vm);
+    const cal=[];for(let i=0;i<fd2;i++)cal.push(null);for(let d=1;d<=dim;d++)cal.push(d);
 
     return (
-      <div style={base}>
-        <FVHHeader />
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-          {["dashboard","calendar","shifts","payroll","staff","rules"].map(t => <button key={t} style={btn(adminTab === t)} onClick={() => setAdminTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>)}
+      <div>
+        <Hdr/>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
+          {["dashboard","calendar","shifts","payroll","staff","rules"].map(function(t){return <button key={t} style={btn(adminTab===t)} onClick={function(){setAdminTab(t);}}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>;})}
         </div>
 
-        {adminTab === "dashboard" && (
+        {adminTab==="dashboard" && (
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 16 }}>
-              {[["Total Staff", receptionists.length], ["Today Shifts", todayShifts.length], ["Pending Approvals", pendingApprovals], ["Month Shifts", shifts.filter(s => s.month === today.getMonth() && s.year === today.getFullYear()).length]].map(([label, value]) => (
-                <div key={label} style={{ background: "#f0f3fa", borderRadius: 8, padding: "12px 14px" }}>
-                  <div style={{ fontSize: 26, fontWeight: 500, color: FVH_BLUE }}>{value}</div>
-                  <div style={{ fontSize: 11, color: "#888" }}>{label}</div>
-                </div>
-              ))}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:16}}>
+              {[["Staff",recs.length],["Today",tds.length],["Approvals",pend],["Month",shifts.filter(function(s){return s.month===today.getMonth()&&s.year===today.getFullYear();}).length]].map(function([l,v]){
+                return <div key={l} style={{background:"#f0f3fa",borderRadius:8,padding:"12px 14px"}}><div style={{fontSize:26,fontWeight:500,color:B}}>{v}</div><div style={{fontSize:11,color:"#888"}}>{l}</div></div>;
+              })}
             </div>
             <div style={card}>
-              <div style={{ fontWeight: 500, marginBottom: 10 }}>Today - {today.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>
-              {todayShifts.length === 0 && <div style={{ color: "#888", fontSize: 13 }}>No shifts today</div>}
-              {todayShifts.map(sh => { const m = staffState.find(st => st.id === sh.staffId); const ev = clockEvents.find(c => c.shiftId === sh.id); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); return <div key={sh.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #eee", fontSize: 13 }}><span style={{ fontWeight: 500 }}>{m && m.name}</span><span style={{ color: col.text, fontSize: 12 }}>{col.label} - {sh.shiftTime}</span><span>{ev && ev.approved ? <span style={tag("#0f6e56")}>Approved</span> : ev && ev.clockOut ? <span style={tag("#378add")}>Out</span> : ev && ev.clockIn ? <span style={tag("#ba7517")}>In</span> : <span style={{ color: "#aaa" }}>-</span>}</span></div>; })}
+              <div style={{fontWeight:500,marginBottom:10}}>Today - {today.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
+              {tds.length===0&&<div style={{color:"#888",fontSize:13}}>No shifts today</div>}
+              {tds.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"0.5px solid #eee",fontSize:13}}><span style={{fontWeight:500}}>{m&&m.name}</span><span style={{color:col.text,fontSize:12}}>{col.label} - {sh.shiftTime}</span><span>{ev&&ev.approved?<span style={tag("#0f6e56")}>Approved</span>:ev&&ev.clockOut?<span style={tag("#378add")}>Out</span>:ev&&ev.clockIn?<span style={tag("#ba7517")}>In</span>:<span style={{color:"#aaa"}}>-</span>}</span></div>;})}
             </div>
           </div>
         )}
 
-        {adminTab === "calendar" && (
+        {adminTab==="calendar" && (
           <div>
             <div style={card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <button style={btn(false)} onClick={prevMonth}>prev</button>
-                <span style={{ fontWeight: 500, flex: 1, textAlign: "center" }}>{MONTH_NAMES[viewMonth]} {viewYear}</span>
-                <button style={btn(false)} onClick={nextMonth}>next</button>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                <button style={btn(false)} onClick={function(){if(vm===0){setVm(11);setVy(function(y){return y-1;});}else setVm(function(m){return m-1;});}}>prev</button>
+                <span style={{fontWeight:500,flex:1,textAlign:"center"}}>{MONTHS[vm]} {vy}</span>
+                <button style={btn(false)} onClick={function(){if(vm===11){setVm(0);setVy(function(y){return y+1;});}else setVm(function(m){return m+1;});}}>next</button>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-                {DAY_NAMES.map(d => <div key={d} style={{ textAlign: "center", fontSize: 11, color: "#888", padding: "4px 0", fontWeight: 500 }}>{d}</div>)}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
+                {DAYS.map(function(d){return <div key={d} style={{textAlign:"center",fontSize:11,color:"#888",padding:"4px 0",fontWeight:500}}>{d}</div>;})}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
-                {calCells.map((day, i) => {
-                  if (!day) return <div key={i} />;
-                  const ds = getShiftsForDay(day, viewMonth, viewYear);
-                  const sbs = getStandbysForDay(day, viewMonth, viewYear);
-                  const isToday = day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4}}>
+                {cal.map(function(day,i){
+                  if(!day)return <div key={i}/>;
+                  const ds=dayShifts(day,vm,vy);
+                  const isT=day===today.getDate()&&vm===today.getMonth()&&vy===today.getFullYear();
                   return (
-                    <div key={i} onClick={() => setSelectedDay(day)} style={{ minHeight: 80, borderRadius: 10, border: isToday ? "2px solid " + FVH_BLUE : "0.5px solid #dde3ee", background: selectedDay === day ? FVH_LIGHT : "#fff", padding: "6px 8px", cursor: "pointer" }}>
-                      <div style={{ fontSize: 12, fontWeight: isToday ? 700 : 400, color: isToday ? "#fff" : "#1a1a2e", background: isToday ? FVH_BLUE : "transparent", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}>{day}</div>
-                      {ds.slice(0, 2).map(sh => { const m = staffState.find(st => st.id === sh.staffId); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); return <div key={sh.id} style={{ fontSize: 9, background: col.bg, color: col.text, borderRadius: 3, padding: "2px 4px", marginTop: 2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{m && m.name}</div>; })}
-                      {ds.length > 2 && <div style={{ fontSize: 9, color: "#aaa", marginTop: 2 }}>+{ds.length - 2}</div>}
-                      {sbs.map(sb => { const m = staffState.find(st => st.id === sb.staffId); return <div key={sb.id} style={{ fontSize: 9, background: SBC.bg, color: SBC.text, borderRadius: 3, padding: "2px 4px", marginTop: 2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>SB: {m && m.name}</div>; })}
+                    <div key={i} onClick={function(){setSelDay(day);}} style={{minHeight:80,borderRadius:10,border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:selDay===day?"#e8eef7":"#fff",padding:"6px 8px",cursor:"pointer"}}>
+                      <div style={{fontSize:12,fontWeight:isT?700:400,color:isT?"#fff":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:4}}>{day}</div>
+                      {ds.slice(0,2).map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{fontSize:9,background:col.bg,color:col.text,borderRadius:3,padding:"2px 4px",marginTop:2,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{m&&m.name}</div>;})}
+                      {ds.length>2&&<div style={{fontSize:9,color:"#aaa",marginTop:2}}>+{ds.length-2}</div>}
                     </div>
                   );
                 })}
               </div>
             </div>
             <div style={card}>
-              {!selectedDay && <div style={{ color: "#888", fontSize: 13, textAlign: "center", padding: "12px 0" }}>Select a day to view shifts</div>}
-              {selectedDay && (() => {
-                const ds = getShiftsForDay(selectedDay, viewMonth, viewYear);
-                const sbs = getStandbysForDay(selectedDay, viewMonth, viewYear);
-                const dateLabel = new Date(viewYear, viewMonth, selectedDay).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" });
+              {!selDay&&<div style={{color:"#888",fontSize:13,textAlign:"center",padding:"12px 0"}}>Select a day to view shifts</div>}
+              {selDay&&(function(){
+                const ds=dayShifts(selDay,vm,vy);
+                const sbs=daySBs(selDay,vm,vy);
                 return (
                   <div>
-                    <div style={{ fontWeight: 500, marginBottom: 10, color: FVH_BLUE }}>{dateLabel}</div>
-                    {ds.length === 0 && sbs.length === 0 && <div style={{ fontSize: 13, color: "#888" }}>No shifts allocated</div>}
-                    {ds.map(sh => { const member = staffState.find(st => st.id === sh.staffId); const ev = clockEvents.find(c => c.shiftId === sh.id); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); return <div key={sh.id} style={{ ...card, borderLeft: "4px solid " + col.border, marginBottom: 8 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}><div><div style={{ fontWeight: 500 }}>{member && member.name}</div><div style={{ fontSize: 12, color: col.text }}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{ fontSize: 11, color: "#888" }}>{sh.station}{sh.note ? " - " + sh.note : ""}{sh.recurring ? " (recurring)" : ""}</div></div><div style={{ display: "flex", gap: 5 }}>{ev && ev.approved && <span style={tag("#0f6e56")}>Approved</span>}{ev && ev.clockOut && !ev.approved && <span style={tag("#378add")}>Out</span>}{ev && ev.clockIn && !ev.clockOut && <span style={tag("#ba7517")}>In</span>}<button style={{ ...btn(false), fontSize: 11, padding: "3px 7px" }} onClick={() => { setReallocModal(sh); setReallocStaff(""); }}>Reallocate</button><button style={{ ...btn(false), fontSize: 11, padding: "3px 7px", color: "#c0392b" }} onClick={() => deleteShift(sh.id)}>Remove</button></div></div></div>; })}
-                    {sbs.map(sb => { const member = staffState.find(st => st.id === sb.staffId); return <div key={sb.id} style={{ background: SBC.bg, border: "1px solid " + SBC.border, borderRadius: 10, padding: "10px 12px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}><div><div style={{ fontWeight: 500, color: SBC.text }}>Standby - {member && member.name}</div>{sb.note && <div style={{ fontSize: 11, color: SBC.text }}>{sb.note}</div>}</div><button style={{ ...btn(false), fontSize: 11, color: "#c0392b" }} onClick={() => deleteStandby(sb.id)}>Remove</button></div>; })}
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <button style={{ ...btn(true), background: FVH_BLUE, color: "#fff", border: "none" }} onClick={() => setShiftModal({ day: selectedDay, month: viewMonth, year: viewYear })}>+ Add Shift</button>
-                      <button style={{ background: SBC.bg, color: SBC.text, border: "1px solid " + SBC.border, borderRadius: 8, padding: "7px 14px", cursor: "pointer", fontSize: 13 }} onClick={() => setStandbyModal({ day: selectedDay, month: viewMonth, year: viewYear })}>+ Add Standby</button>
+                    <div style={{fontWeight:500,marginBottom:10,color:B}}>{new Date(vy,vm,selDay).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
+                    {ds.length===0&&sbs.length===0&&<div style={{fontSize:13,color:"#888"}}>No shifts allocated</div>}
+                    {ds.map(function(sh){const mem=staff.find(function(s){return s.id===sh.staffId;});const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{...card,borderLeft:"4px solid "+col.border,marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}><div><div style={{fontWeight:500}}>{mem&&mem.name}</div><div style={{fontSize:12,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{fontSize:11,color:"#888"}}>{sh.station}{sh.recurring?" (recurring)":""}</div></div><div style={{display:"flex",gap:5}}>{ev&&ev.approved&&<span style={tag("#0f6e56")}>Approved</span>}{ev&&ev.clockOut&&!ev.approved&&<span style={tag("#378add")}>Out</span>}{ev&&ev.clockIn&&!ev.clockOut&&<span style={tag("#ba7517")}>In</span>}<button style={{...btn(false),fontSize:11,padding:"3px 7px"}} onClick={function(){setReallocMod(sh);setReallocTo("");}}>Reallocate</button><button style={{...btn(false),fontSize:11,padding:"3px 7px",color:"#c0392b"}} onClick={function(){delShift(sh.id);}}>Remove</button></div></div></div>;})}
+                    {sbs.map(function(sb){const mem=staff.find(function(s){return s.id===sb.staffId;});return <div key={sb.id} style={{background:SBC.bg,border:"1px solid "+SBC.border,borderRadius:10,padding:"10px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:500,color:SBC.text}}>Standby - {mem&&mem.name}</div>{sb.note&&<div style={{fontSize:11,color:SBC.text}}>{sb.note}</div>}</div><button style={{...btn(false),fontSize:11,color:"#c0392b"}} onClick={function(){delSB(sb.id);}}>Remove</button></div>;})}
+                    <div style={{display:"flex",gap:8,marginTop:10}}>
+                      <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setShiftMod({day:selDay,month:vm,year:vy});}}>+ Add Shift</button>
+                      <button style={{background:SBC.bg,color:SBC.text,border:"1px solid "+SBC.border,borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13}} onClick={function(){setSbMod({day:selDay,month:vm,year:vy});}}>+ Add Standby</button>
                     </div>
                   </div>
                 );
@@ -726,240 +618,237 @@ function App() {
           </div>
         )}
 
-        {adminTab === "shifts" && (
+        {adminTab==="shifts" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {[["roster","Daily Roster"],["reallocate","Reallocate"],["upload","AI Reader"]].map(([id, label]) => <button key={id} style={{ ...btn(shiftSubTab === id), fontSize: 12 }} onClick={() => setShiftSubTab(id)}>{label}</button>)}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{display:"flex",gap:6}}>
+                {[["roster","Roster"],["reallocate","Reallocate"]].map(function([id,lb]){return <button key={id} style={{...btn(subTab===id),fontSize:12}} onClick={function(){setSubTab(id);}}>{lb}</button>;})}
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button style={{ ...btn(true), background: FVH_BLUE, color: "#fff", border: "none" }} onClick={() => setShiftModal({ day: today.getDate(), month: today.getMonth(), year: today.getFullYear() })}>+ Shift</button>
-                <button style={{ background: SBC.bg, color: SBC.text, border: "1px solid " + SBC.border, borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontSize: 13 }} onClick={() => setStandbyModal({ day: today.getDate(), month: today.getMonth(), year: today.getFullYear() })}>+ Standby</button>
+              <div style={{display:"flex",gap:6}}>
+                <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setShiftMod({day:today.getDate(),month:today.getMonth(),year:today.getFullYear()});}}>+ Shift</button>
+                <button style={{background:SBC.bg,color:SBC.text,border:"1px solid "+SBC.border,borderRadius:8,padding:"7px 12px",cursor:"pointer",fontSize:13}} onClick={function(){setSbMod({day:today.getDate(),month:today.getMonth(),year:today.getFullYear()});}}>+ Standby</button>
               </div>
             </div>
-
-            {shiftSubTab === "upload" && (
-              <div>
-                <div style={{ ...card, borderLeft: "4px solid " + FVH_BLUE }}>
-                  <div style={{ fontWeight: 500, marginBottom: 6 }}>AI Shift Reader</div>
-                  <div style={{ fontSize: 12, color: "#888", marginBottom: 16, lineHeight: 1.7 }}>Upload a <strong>photo</strong>, <strong>Word doc (.docx)</strong> or <strong>PDF</strong> of the shift schedule. The AI will read it and load all shifts for your review.</div>
-                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8, background: FVH_BLUE, color: "#fff", borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                    {uploading ? "Reading..." : "Upload photo or file"}
-                    <input type="file" accept=".pdf,.docx,image/*" style={{ display: "none" }} onChange={handleUpload} disabled={uploading} />
-                  </label>
-                  {uploading && <div style={{ marginTop: 12, fontSize: 13, color: "#888" }}>Reading shift schedule, please wait...</div>}
-                </div>
-                {uploadResult && uploadResult.error && <div style={{ ...card, borderLeft: "4px solid #c0392b", color: "#c0392b", fontSize: 13 }}>{uploadResult.error}</div>}
-                {uploadResult && !uploadResult.error && (
-                  <div>
-                    <div style={{ fontWeight: 500, marginBottom: 10, fontSize: 13 }}>{uploadResult.filter(s => s.staffId).length} matched - {uploadResult.filter(s => !s.staffId).length} unmatched</div>
-                    <div style={{ ...card, background: "#f8f9fc", marginBottom: 12 }}>
-                      <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                        {uploadResult.map((s, i) => { const col = s.staffId ? getShiftColor(s.shiftType, s.year, s.month, s.day) : null; return <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 4px", borderBottom: "0.5px solid #eee", fontSize: 12, gap: 8 }}><div style={{ display: "flex", gap: 8, alignItems: "center" }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: s.staffId ? "#10B981" : "#c0392b", flexShrink: 0 }} /><span style={{ fontWeight: 500, color: s.staffId ? "#1a1a2e" : "#c0392b" }}>{s.staffName}</span></div><span style={{ color: "#888", fontSize: 11 }}>{new Date(s.year, s.month, s.day).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}</span><span style={{ color: col ? col.text : "#c0392b", background: col ? col.bg : "#fde8e8", borderRadius: 4, padding: "2px 7px", fontSize: 11 }}>{s.shiftLabel}</span><span style={{ color: "#888", fontSize: 11 }}>{s.shiftTime}</span></div>; })}
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button style={{ ...btn(true), background: FVH_BLUE, color: "#fff", border: "none", padding: "9px 20px" }} onClick={() => confirmUploadShifts(uploadResult)}>Load {uploadResult.filter(s => s.staffId).length} Shifts</button>
-                      <button style={{ ...btn(false), padding: "9px 20px" }} onClick={() => setUploadResult(null)}>Cancel</button>
-                    </div>
+            {Object.keys(grouped).length===0&&<div style={{color:"#888",fontSize:13}}>No shifts yet.</div>}
+            {Object.values(grouped).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);}).map(function(g){
+              const k=g.year+"-"+g.month+"-"+g.day;
+              const dl=new Date(g.year,g.month,g.day).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+              const isT=g.day===today.getDate()&&g.month===today.getMonth()&&g.year===today.getFullYear();
+              const sbs=daySBs(g.day,g.month,g.year);
+              return (
+                <div key={k} style={{marginBottom:20}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <div style={{fontWeight:600,fontSize:13,color:isT?B:"#1a1a2e"}}>{dl}</div>
+                    {isT&&<span style={{...tag(B),fontSize:10}}>Today</span>}
+                    <div style={{flex:1,height:"0.5px",background:"#dde3ee"}}/>
+                    <span style={{fontSize:11,color:"#888"}}>{g.shifts.length} shift{g.shifts.length!==1?"s":""}{sbs.length>0?" + "+sbs.length+" SB":""}</span>
                   </div>
-                )}
-              </div>
-            )}
-
-            {(shiftSubTab === "roster" || shiftSubTab === "reallocate") && (
-              <div>
-                {Object.keys(grouped).length === 0 && <div style={{ color: "#888", fontSize: 13 }}>No shifts yet.</div>}
-                {Object.values(grouped).sort((a,b) => new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day)).map(group => {
-                  const key = group.year + "-" + group.month + "-" + group.day;
-                  const dateLabel = new Date(group.year, group.month, group.day).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-                  const isToday = group.day === today.getDate() && group.month === today.getMonth() && group.year === today.getFullYear();
-                  const daySBs = getStandbysForDay(group.day, group.month, group.year);
-                  return (
-                    <div key={key} style={{ marginBottom: 20 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: isToday ? FVH_BLUE : "#1a1a2e" }}>{dateLabel}</div>
-                        {isToday && <span style={{ ...tag(FVH_BLUE), fontSize: 10 }}>Today</span>}
-                        <div style={{ flex: 1, height: "0.5px", background: "#dde3ee" }} />
-                        <span style={{ fontSize: 11, color: "#888" }}>{group.shifts.length} shift{group.shifts.length !== 1 ? "s" : ""}{daySBs.length > 0 ? " + " + daySBs.length + " SB" : ""}</span>
-                      </div>
-                      {shiftSubTab === "roster" && (
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(175px,1fr))", gap: 8 }}>
-                          {group.shifts.map(sh => { const m = staffState.find(st => st.id === sh.staffId); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); const ev = clockEvents.find(c => c.shiftId === sh.id); return <div key={sh.id} style={{ background: col.bg, borderRadius: 10, padding: "10px 12px", borderLeft: "4px solid " + col.border }}><div style={{ fontWeight: 600, fontSize: 13, color: col.text }}>{m && m.name}</div><div style={{ fontSize: 11, color: col.text, opacity: 0.85, marginTop: 2 }}>{col.label} - {sh.shiftLabel}</div><div style={{ fontSize: 11, color: col.text, opacity: 0.75 }}>{sh.shiftTime}</div><div style={{ fontSize: 10, color: col.text, opacity: 0.65, marginTop: 2 }}>{sh.station}{sh.recurring ? " *" : ""}</div>{ev && <div style={{ marginTop: 4 }}>{ev.approved && <span style={{ fontSize: 10, background: "rgba(16,185,129,0.2)", color: "#065F46", borderRadius: 4, padding: "2px 6px" }}>Approved</span>}{ev.clockOut && !ev.approved && <span style={{ fontSize: 10, background: "rgba(55,138,221,0.2)", color: "#185FA5", borderRadius: 4, padding: "2px 6px" }}>Out</span>}{ev.clockIn && !ev.clockOut && <span style={{ fontSize: 10, background: "rgba(186,117,23,0.2)", color: "#92400E", borderRadius: 4, padding: "2px 6px" }}>In</span>}</div>}</div>; })}
-                          {daySBs.map(sb => { const m = staffState.find(st => st.id === sb.staffId); return <div key={sb.id} style={{ background: SBC.bg, borderRadius: 10, padding: "10px 12px", borderLeft: "4px solid " + SBC.border }}><div style={{ fontWeight: 600, fontSize: 13, color: SBC.text }}>{m && m.name}</div><div style={{ fontSize: 11, color: SBC.text, opacity: 0.85, marginTop: 2 }}>Standby</div></div>; })}
-                        </div>
-                      )}
-                      {shiftSubTab === "reallocate" && (
-                        <div>
-                          {group.shifts.map(sh => { const m = staffState.find(st => st.id === sh.staffId); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); return <div key={sh.id} style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: "4px solid " + col.border, marginBottom: 6 }}><div><div style={{ fontWeight: 500 }}>{m && m.name}</div><div style={{ fontSize: 12, color: col.text }}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{ fontSize: 11, color: "#888" }}>{sh.station}{sh.recurring ? " (recurring)" : ""}</div></div><div style={{ display: "flex", gap: 6 }}><button style={{ ...btn(true), fontSize: 11, padding: "5px 10px", background: FVH_BLUE, color: "#fff", border: "none" }} onClick={() => { setReallocModal(sh); setReallocStaff(""); }}>Reallocate</button><button style={{ ...btn(false), fontSize: 11, padding: "5px 10px", color: "#c0392b" }} onClick={() => deleteShift(sh.id)}>Remove</button></div></div>; })}
-                          {daySBs.map(sb => { const m = staffState.find(st => st.id === sb.staffId); return <div key={sb.id} style={{ background: SBC.bg, border: "1px solid " + SBC.border, borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}><div><div style={{ fontWeight: 500, color: SBC.text }}>Standby - {m && m.name}</div></div><button style={{ ...btn(false), fontSize: 11, color: "#c0392b" }} onClick={() => deleteStandby(sb.id)}>Remove</button></div>; })}
-                        </div>
-                      )}
+                  {subTab==="roster"&&(
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:8}}>
+                      {g.shifts.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);const ev=clocks.find(function(c){return c.shiftId===sh.id;});return <div key={sh.id} style={{background:col.bg,borderRadius:10,padding:"10px 12px",borderLeft:"4px solid "+col.border}}><div style={{fontWeight:600,fontSize:13,color:col.text}}>{m&&m.name}</div><div style={{fontSize:11,color:col.text,opacity:0.85,marginTop:2}}>{col.label} - {sh.shiftLabel}</div><div style={{fontSize:11,color:col.text,opacity:0.75}}>{sh.shiftTime}</div><div style={{fontSize:10,color:col.text,opacity:0.65,marginTop:2}}>{sh.station}{sh.recurring?" *":""}</div>{ev&&<div style={{marginTop:4}}>{ev.approved&&<span style={{fontSize:10,background:"rgba(16,185,129,0.2)",color:"#065F46",borderRadius:4,padding:"2px 6px"}}>Approved</span>}{ev.clockOut&&!ev.approved&&<span style={{fontSize:10,background:"rgba(55,138,221,0.2)",color:"#185FA5",borderRadius:4,padding:"2px 6px"}}>Out</span>}{ev.clockIn&&!ev.clockOut&&<span style={{fontSize:10,background:"rgba(186,117,23,0.2)",color:"#92400E",borderRadius:4,padding:"2px 6px"}}>In</span>}</div>}</div>;})}
+                      {sbs.map(function(sb){const m=staff.find(function(s){return s.id===sb.staffId;});return <div key={sb.id} style={{background:SBC.bg,borderRadius:10,padding:"10px 12px",borderLeft:"4px solid "+SBC.border}}><div style={{fontWeight:600,fontSize:13,color:SBC.text}}>{m&&m.name}</div><div style={{fontSize:11,color:SBC.text,opacity:0.85,marginTop:2}}>Standby</div></div>;})}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                  {subTab==="reallocate"&&(
+                    <div>
+                      {g.shifts.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{...card,display:"flex",justifyContent:"space-between",alignItems:"center",borderLeft:"4px solid "+col.border,marginBottom:6}}><div><div style={{fontWeight:500}}>{m&&m.name}</div><div style={{fontSize:12,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div></div><div style={{display:"flex",gap:6}}><button style={{...btn(true),fontSize:11,padding:"5px 10px",background:B,color:"#fff",border:"none"}} onClick={function(){setReallocMod(sh);setReallocTo("");}}>Reallocate</button><button style={{...btn(false),fontSize:11,padding:"5px 10px",color:"#c0392b"}} onClick={function(){delShift(sh.id);}}>Remove</button></div></div>;})}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {adminTab === "payroll" && (
+        {adminTab==="payroll" && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <button style={btn(false)} onClick={() => { if (payMonth === 0) { setPayMonth(11); setPayYear(y => y - 1); } else setPayMonth(m => m - 1); }}>prev</button>
-              <span style={{ fontWeight: 500 }}>{payMonthName}</span>
-              <button style={btn(false)} onClick={() => { if (payMonth === 11) { setPayMonth(0); setPayYear(y => y + 1); } else setPayMonth(m => m + 1); }}>next</button>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+              <button style={btn(false)} onClick={function(){if(payM===0){setPayM(11);setPayY(function(y){return y-1;});}else setPayM(function(m){return m-1;});}}>prev</button>
+              <span style={{fontWeight:500}}>{pmn}</span>
+              <button style={btn(false)} onClick={function(){if(payM===11){setPayM(0);setPayY(function(y){return y+1;});}else setPayM(function(m){return m+1;});}}>next</button>
             </div>
             <div style={card}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead><tr style={{ borderBottom: "0.5px solid #dde3ee" }}>{["Name","Shifts","Hours","Rate (R/hr)","Total Pay"].map(h => <th key={h} style={{ textAlign: "left", padding: "6px 8px", fontSize: 11, color: "#888", fontWeight: 500 }}>{h}</th>)}</tr></thead>
-                <tbody>{payData.map(r => <tr key={r.id} style={{ borderBottom: "0.5px solid #eee" }}><td style={{ padding: "8px", fontWeight: 500 }}>{r.name}</td><td style={{ padding: "8px" }}>{r.shiftsCount}</td><td style={{ padding: "8px" }}>{r.totalHours.toFixed(2)}</td><td style={{ padding: "8px" }}>R {r.hourlyRate.toFixed(2)}</td><td style={{ padding: "8px", fontWeight: 500, color: FVH_BLUE }}>R {r.totalPay.toFixed(2)}</td></tr>)}</tbody>
-                <tfoot><tr style={{ borderTop: "1.5px solid " + FVH_BLUE }}><td colSpan={2} style={{ padding: "8px", fontWeight: 500 }}>Total</td><td style={{ padding: "8px", fontWeight: 500 }}>{payData.reduce((a, r) => a + r.totalHours, 0).toFixed(2)}</td><td></td><td style={{ padding: "8px", fontWeight: 500, color: FVH_BLUE }}>R {payData.reduce((a, r) => a + r.totalPay, 0).toFixed(2)}</td></tr></tfoot>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <thead><tr style={{borderBottom:"0.5px solid #dde3ee"}}>{["Name","Shifts","Hours","Rate","Total Pay"].map(function(h){return <th key={h} style={{textAlign:"left",padding:"6px 8px",fontSize:11,color:"#888",fontWeight:500}}>{h}</th>;})}</tr></thead>
+                <tbody>{pd.map(function(r){return <tr key={r.id} style={{borderBottom:"0.5px solid #eee"}}><td style={{padding:"8px",fontWeight:500}}>{r.name}</td><td style={{padding:"8px"}}>{r.cnt}</td><td style={{padding:"8px"}}>{r.hrs.toFixed(2)}</td><td style={{padding:"8px"}}>R {r.hourlyRate.toFixed(2)}</td><td style={{padding:"8px",fontWeight:500,color:B}}>R {r.pay.toFixed(2)}</td></tr>;})}</tbody>
+                <tfoot><tr style={{borderTop:"1.5px solid "+B}}><td colSpan={2} style={{padding:"8px",fontWeight:500}}>Total</td><td style={{padding:"8px",fontWeight:500}}>{pd.reduce(function(a,r){return a+r.hrs;},0).toFixed(2)}</td><td/><td style={{padding:"8px",fontWeight:500,color:B}}>R {pd.reduce(function(a,r){return a+r.pay;},0).toFixed(2)}</td></tr></tfoot>
               </table>
             </div>
-            <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>Hours from approved records only.</div>
-            <button style={{ ...btn(true), background: FVH_BLUE, color: "#fff", border: "none", marginTop: 14, padding: "10px 20px" }} onClick={() => {
-              const rows = [["Name","Shifts","Hours","Rate","Total Pay"], ...payData.map(r => [r.name, r.shiftsCount, r.totalHours.toFixed(2), r.hourlyRate.toFixed(2), r.totalPay.toFixed(2)]), ["TOTAL","",payData.reduce((a,r)=>a+r.totalHours,0).toFixed(2),"",payData.reduce((a,r)=>a+r.totalPay,0).toFixed(2)]];
-              const csv = rows.map(r => r.map(v => '"' + v + '"').join(",")).join("\n");
-              const blob = new Blob([csv], { type: "text/csv" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a"); a.href = url; a.download = "FVH_Payroll_" + payMonthName.replace(" ","_") + ".csv"; a.click(); URL.revokeObjectURL(url);
+            <button style={{...btn(true),background:B,color:"#fff",border:"none",marginTop:14,padding:"10px 20px"}} onClick={function(){
+              const rows=[["Name","Shifts","Hours","Rate","Total Pay"],...pd.map(function(r){return [r.name,r.cnt,r.hrs.toFixed(2),r.hourlyRate.toFixed(2),r.pay.toFixed(2)];}),["TOTAL","",pd.reduce(function(a,r){return a+r.hrs;},0).toFixed(2),"",pd.reduce(function(a,r){return a+r.pay;},0).toFixed(2)]];
+              const csv=rows.map(function(r){return r.map(function(v){return '"'+v+'"';}).join(",");}).join("\n");
+              const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);
+              const a=document.createElement("a");a.href=url;a.download="FVH_Payroll_"+pmn.replace(" ","_")+".csv";a.click();URL.revokeObjectURL(url);
             }}>Download CSV</button>
           </div>
         )}
 
-        {adminTab === "staff" && (
+        {adminTab==="staff" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 500 }}>Staff profiles</div>
-              <button style={{ ...btn(true), background: FVH_BLUE, color: "#fff", border: "none" }} onClick={() => setAddStaffOpen(true)}>+ Add Staff</button>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{fontWeight:500}}>Staff profiles</div>
+              <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setAddStaffOpen(true);}}>+ Add Staff</button>
             </div>
-            {staffState.map(m => (
-              <div key={m.id} style={{ ...card, padding: "12px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: FVH_BLUE + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: FVH_BLUE }}>{m.name[0]}</div>
-                    <div>
-                      <div style={{ fontWeight: 500, fontSize: 14 }}>{m.name}</div>
-                      <span style={{ ...tag(ROLE_COLORS[m.role] || "#888"), fontSize: 10 }}>{m.role}</span>
-                    </div>
+            {staff.map(function(m){return (
+              <div key={m.id} style={{...card,padding:"12px 16px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:36,height:36,borderRadius:"50%",background:B+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:500,color:B}}>{m.name[0]}</div>
+                    <div><div style={{fontWeight:500,fontSize:14}}>{m.name}</div><span style={{...tag("#1e3a6e"),fontSize:10,padding:"1px 6px"}}>{m.role}</span></div>
                   </div>
-                  {m.role === "receptionist" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {editRateId === m.id ? (
+                  {m.role==="receptionist"&&(
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      {editRateId===m.id?(
                         <>
-                          <span style={{ fontSize: 13, color: "#888" }}>R</span>
-                          <input type="number" autoFocus style={{ ...inpLight, width: 80, padding: "5px 8px" }} value={editRateVal} onChange={e => setEditRateVal(e.target.value)} onKeyDown={e => e.key === "Enter" && saveRate(m.id)} />
-                          <span style={{ fontSize: 13, color: "#888" }}>/hr</span>
-                          <button style={{ ...btn(true), padding: "5px 12px", fontSize: 12 }} onClick={() => saveRate(m.id)}>Save</button>
-                          <button style={{ ...btn(false), padding: "5px 12px", fontSize: 12 }} onClick={() => setEditRateId(null)}>Cancel</button>
+                          <span style={{fontSize:13,color:"#888"}}>R</span>
+                          <input type="number" autoFocus style={{...li,width:80,padding:"5px 8px"}} value={editRateVal} onChange={function(e){setEditRateVal(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")saveRate(m.id);}}/>
+                          <span style={{fontSize:13,color:"#888"}}>/hr</span>
+                          <button style={{...btn(true),padding:"5px 12px",fontSize:12}} onClick={function(){saveRate(m.id);}}>Save</button>
+                          <button style={{...btn(false),padding:"5px 12px",fontSize:12}} onClick={function(){setEditRateId(null);}}>Cancel</button>
                         </>
-                      ) : (
+                      ):(
                         <>
-                          <span style={{ fontSize: 14, fontWeight: 500, color: FVH_BLUE }}>R {m.hourlyRate}/hr</span>
-                          <button style={{ ...btn(false), padding: "5px 12px", fontSize: 12 }} onClick={() => { setEditRateId(m.id); setEditRateVal(m.hourlyRate); }}>Edit rate</button>
+                          <span style={{fontSize:14,fontWeight:500,color:B}}>R {m.hourlyRate}/hr</span>
+                          <button style={{...btn(false),padding:"5px 12px",fontSize:12}} onClick={function(){setEditRateId(m.id);setEditRateVal(m.hourlyRate);}}>Edit rate</button>
                         </>
                       )}
-                      <button style={{ ...btn(false), padding: "5px 10px", fontSize: 12, color: "#c0392b" }} onClick={() => { if (window.confirm("Remove " + m.name + "?")) deleteStaffMember(m.id); }}>Delete</button>
+                      <button style={{...btn(false),padding:"5px 10px",fontSize:12,color:"#c0392b"}} onClick={function(){if(window.confirm("Remove "+m.name+"?"))delStaff(m.id);}}>Delete</button>
                     </div>
                   )}
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
 
-        {adminTab === "rules" && (
+        {adminTab==="rules" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontWeight: 500 }}>Rules and Protocols</div>
-              <button style={{ ...btn(true), background: FVH_BLUE, color: "#fff", border: "none" }} onClick={() => { setRuleModal("new"); setEditRule({ title: "", content: "" }); }}>+ Add Rule</button>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{fontWeight:500}}>Rules and Protocols</div>
+              <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setRuleMod("new");setNewRule({title:"",content:""});}}>+ Add Rule</button>
             </div>
-            {rules.map(r => (
-              <div key={r.id} style={{ ...card, borderLeft: "4px solid " + FVH_BLUE }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <div style={{ fontWeight: 500 }}>{r.title}</div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button style={{ ...btn(false), fontSize: 11, padding: "4px 8px" }} onClick={() => { setRuleModal(r.id); setEditRule({ title: r.title, content: r.content }); }}>Edit</button>
-                    <button style={{ ...btn(false), fontSize: 11, padding: "4px 8px", color: "#c0392b" }} onClick={() => deleteRuleFn(r.id)}>Delete</button>
+            {rules.map(function(r){return (
+              <div key={r.id} style={{...card,borderLeft:"4px solid "+B}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                  <div style={{fontWeight:500}}>{r.title}</div>
+                  <div style={{display:"flex",gap:6}}>
+                    <button style={{...btn(false),fontSize:11,padding:"4px 8px"}} onClick={function(){setRuleMod(r.id);setNewRule({title:r.title,content:r.content});}}>Edit</button>
+                    <button style={{...btn(false),fontSize:11,padding:"4px 8px",color:"#c0392b"}} onClick={function(){delRule(r.id);}}>Delete</button>
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: "#666", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{r.content}</div>
+                <div style={{fontSize:12,color:"#666",whiteSpace:"pre-wrap",lineHeight:1.6}}>{r.content}</div>
               </div>
-            ))}
+            );})}
           </div>
         )}
 
-        {shiftModal && <Modal onClose={() => setShiftModal(null)}><div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, color: "#fff" }}>Add shift - {new Date(shiftModal.year, shiftModal.month, shiftModal.day).toLocaleDateString("en-ZA", { day: "numeric", month: "long" })}</div>{[["Staff member","staffId","staff"],["Shift type","shiftType","shift"],["Station","station","station"],["Note (optional)","note","text"]].map(([label, key, type]) => (<div key={key} style={{ marginBottom: 12 }}><label style={inpLabel}>{label}</label>{type === "staff" && <select style={inp} value={newShift.staffId} onChange={e => setNewShift(p => ({ ...p, staffId: e.target.value }))}><option value="">Select...</option>{receptionists.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select>}{type === "shift" && <select style={inp} value={newShift.shiftType} onChange={e => setNewShift(p => ({ ...p, shiftType: e.target.value }))}>{SHIFT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label} ({t.time})</option>)}</select>}{type === "station" && <select style={inp} value={newShift.station} onChange={e => setNewShift(p => ({ ...p, station: e.target.value }))}>{STATIONS.map(s => <option key={s}>{s}</option>)}</select>}{type === "text" && <input style={inp} placeholder="e.g. Staff Meeting" value={newShift.note} onChange={e => setNewShift(p => ({ ...p, note: e.target.value }))} />}</div>))}<div style={{ display: "flex", gap: 8 }}><button style={modalBtn(true)} onClick={addShift}>Add Shift</button><button style={modalBtn(false)} onClick={() => setShiftModal(null)}>Cancel</button></div></Modal>}
-        {standbyModal && <Modal onClose={() => setStandbyModal(null)}><div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, color: "#fff" }}>Add Standby - {new Date(standbyModal.year, standbyModal.month, standbyModal.day).toLocaleDateString("en-ZA", { day: "numeric", month: "long" })}</div><div style={{ marginBottom: 12 }}><label style={inpLabel}>Staff member</label><select style={inp} value={newStandby.staffId} onChange={e => setNewStandby(p => ({ ...p, staffId: e.target.value }))}><option value="">Select...</option>{receptionists.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div><div style={{ marginBottom: 14 }}><label style={inpLabel}>Note (optional)</label><input style={inp} placeholder="e.g. Cover for morning shift" value={newStandby.note} onChange={e => setNewStandby(p => ({ ...p, note: e.target.value }))} /></div><div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 12px", marginBottom: 14, fontSize: 12, color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>Standby staff must stay close to home, be ready to arrive ASAP, and will be paid if called in.</div><div style={{ display: "flex", gap: 8 }}><button style={modalBtn(true)} onClick={addStandby}>Confirm</button><button style={modalBtn(false)} onClick={() => setStandbyModal(null)}>Cancel</button></div></Modal>}
-        {reallocModal && <Modal onClose={() => setReallocModal(null)}><div style={{ fontWeight: 600, marginBottom: 6, fontSize: 15, color: "#fff" }}>Reallocate shift</div><div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginBottom: 16 }}>{new Date(reallocModal.year, reallocModal.month, reallocModal.day).toLocaleDateString("en-ZA", { day: "numeric", month: "long" })} - {reallocModal.shiftLabel}</div><div style={{ marginBottom: 16 }}><label style={inpLabel}>Reassign to</label><select style={inp} value={reallocStaff} onChange={e => setReallocStaff(e.target.value)}><option value="">Select...</option>{receptionists.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div><div style={{ display: "flex", gap: 8 }}><button style={modalBtn(true)} onClick={reallocShift}>Confirm</button><button style={modalBtn(false)} onClick={() => setReallocModal(null)}>Cancel</button></div></Modal>}
-        {ruleModal && <Modal onClose={() => setRuleModal(null)}><div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, color: "#fff" }}>{ruleModal === "new" ? "Add rule" : "Edit rule"}</div><div style={{ marginBottom: 12 }}><label style={inpLabel}>Title</label><input style={inp} value={editRule.title} onChange={e => setEditRule(p => ({ ...p, title: e.target.value }))} /></div><div style={{ marginBottom: 16 }}><label style={inpLabel}>Content</label><textarea style={{ ...inp, height: 120, resize: "vertical" }} value={editRule.content} onChange={e => setEditRule(p => ({ ...p, content: e.target.value }))} /></div><div style={{ display: "flex", gap: 8 }}><button style={modalBtn(true)} onClick={saveRuleFn}>Save</button><button style={modalBtn(false)} onClick={() => setRuleModal(null)}>Cancel</button></div></Modal>}
-        {addStaffOpen && <Modal onClose={() => setAddStaffOpen(false)}><div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, color: "#fff" }}>Add new staff member</div>{[["Name","name","text"],["PIN","pin","password"]].map(([label, key, type]) => (<div key={key} style={{ marginBottom: 12 }}><label style={inpLabel}>{label}</label><input type={type} style={inp} value={newStaff[key]} onChange={e => setNewStaff(p => ({ ...p, [key]: e.target.value }))} /></div>))}<div style={{ marginBottom: 12 }}><label style={inpLabel}>Role</label><select style={inp} value={newStaff.role} onChange={e => setNewStaff(p => ({ ...p, role: e.target.value }))}><option value="receptionist">Receptionist</option><option value="vet">Vet</option><option value="nurse">Nurse</option></select></div>{newStaff.role === "receptionist" && <div style={{ marginBottom: 12 }}><label style={inpLabel}>Hourly Rate (R)</label><input type="number" style={inp} value={newStaff.hourlyRate} onChange={e => setNewStaff(p => ({ ...p, hourlyRate: e.target.value }))} /></div>}<div style={{ display: "flex", gap: 8 }}><button style={modalBtn(true)} onClick={addStaffMember}>Add</button><button style={modalBtn(false)} onClick={() => setAddStaffOpen(false)}>Cancel</button></div></Modal>}
+        {shiftMod&&<Modal onClose={function(){setShiftMod(null);}}>
+          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add shift - {new Date(shiftMod.year,shiftMod.month,shiftMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"})}</div>
+          <div style={{marginBottom:12}}><label style={ml}>Staff member</label><select style={mi} value={newShift.staffId} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{staffId:e.target.value});});}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
+          <div style={{marginBottom:12}}><label style={ml}>Shift type</label><select style={mi} value={newShift.shiftType} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{shiftType:e.target.value});});}}>{SHIFTS.map(function(t){return <option key={t.id} value={t.id}>{t.label} ({t.time})</option>;})}</select></div>
+          <div style={{marginBottom:12}}><label style={ml}>Station</label><select style={mi} value={newShift.station} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{station:e.target.value});});}}>{STATIONS.map(function(s){return <option key={s}>{s}</option>;})}</select></div>
+          <div style={{marginBottom:16}}><label style={ml}>Note</label><input style={mi} value={newShift.note} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{note:e.target.value});});}}/></div>
+          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={addShift}>Add Shift</button><button style={mb(false)} onClick={function(){setShiftMod(null);}}>Cancel</button></div>
+        </Modal>}
+
+        {sbMod&&<Modal onClose={function(){setSbMod(null);}}>
+          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add Standby - {new Date(sbMod.year,sbMod.month,sbMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"})}</div>
+          <div style={{marginBottom:12}}><label style={ml}>Staff member</label><select style={mi} value={newSb.staffId} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{staffId:e.target.value});});}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
+          <div style={{marginBottom:16}}><label style={ml}>Note (optional)</label><input style={mi} value={newSb.note} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{note:e.target.value}});}}/></div>
+          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={addSB}>Confirm</button><button style={mb(false)} onClick={function(){setSbMod(null);}}>Cancel</button></div>
+        </Modal>}
+
+        {reallocMod&&<Modal onClose={function(){setReallocMod(null);}}>
+          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Reallocate - {reallocMod.shiftLabel}</div>
+          <div style={{marginBottom:16}}><label style={ml}>Reassign to</label><select style={mi} value={reallocTo} onChange={function(e){setReallocTo(e.target.value);}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
+          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={doRealloc}>Confirm</button><button style={mb(false)} onClick={function(){setReallocMod(null);}}>Cancel</button></div>
+        </Modal>}
+
+        {ruleMod&&<Modal onClose={function(){setRuleMod(null);}}>
+          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>{ruleMod==="new"?"Add rule":"Edit rule"}</div>
+          <div style={{marginBottom:12}}><label style={ml}>Title</label><input style={mi} value={newRule.title} onChange={function(e){setNewRule(function(p){return Object.assign({},p,{title:e.target.value});});}}/></div>
+          <div style={{marginBottom:16}}><label style={ml}>Content</label><textarea style={{...mi,height:120,resize:"vertical"}} value={newRule.content} onChange={function(e){setNewRule(function(p){return Object.assign({},p,{content:e.target.value});});}}/></div>
+          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={saveRule}>Save</button><button style={mb(false)} onClick={function(){setRuleMod(null);}}>Cancel</button></div>
+        </Modal>}
+
+        {addStaffOpen&&<Modal onClose={function(){setAddStaffOpen(false);}}>
+          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add new staff member</div>
+          <div style={{marginBottom:12}}><label style={ml}>Name</label><input style={mi} value={newStaff.name} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{name:e.target.value});});}}/></div>
+          <div style={{marginBottom:12}}><label style={ml}>PIN</label><input type="password" style={mi} value={newStaff.pin} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{pin:e.target.value});});}}/></div>
+          <div style={{marginBottom:12}}><label style={ml}>Role</label><select style={mi} value={newStaff.role} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{role:e.target.value});});}}><option value="receptionist">Receptionist</option><option value="vet">Vet</option><option value="nurse">Nurse</option></select></div>
+          {newStaff.role==="receptionist"&&<div style={{marginBottom:12}}><label style={ml}>Hourly Rate (R)</label><input type="number" style={mi} value={newStaff.hourlyRate} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{hourlyRate:e.target.value});})}}/></div>}
+          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={saveStaff}>Add</button><button style={mb(false)} onClick={function(){setAddStaffOpen(false);}}>Cancel</button></div>
+        </Modal>}
       </div>
     );
   }
 
-  if (currentUser.role === "vet" || currentUser.role === "nurse") {
-    const nameList = currentUser.role === "vet" ? VETS : NURSES;
-    const todayStr = today.toDateString();
-    const todayShifts = getShiftsForDay(today.getDate(), today.getMonth(), today.getFullYear());
-    const pendingEvents = clockEvents.filter(c => { if (c.approved || !c.clockOut) return false; const sh = shifts.find(s => s.id === c.shiftId); return sh && new Date(sh.year, sh.month, sh.day).toDateString() === todayStr; });
+  // ── VET / NURSE ───────────────────────────────────────────────
+  if (user.role==="vet"||user.role==="nurse") {
+    const nameList = user.role==="vet"?VETS:NURSES;
+    const tStr = today.toDateString();
+    const tds = dayShifts(today.getDate(),today.getMonth(),today.getFullYear());
+    const pendEvs = clocks.filter(function(c){
+      if(c.approved||!c.clockOut)return false;
+      const sh=shifts.find(function(s){return s.id===c.shiftId;});
+      return sh&&new Date(sh.year,sh.month,sh.day).toDateString()===tStr;
+    });
 
-    if (!selectedClinician) {
+    if (!clinician) {
       return (
-        <div style={base}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0 16px", borderBottom: "0.5px solid #dde3ee", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ background: FVH_BLUE, borderRadius: 8, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>FVH</span></div>
-              <div><div style={{ fontWeight: 500, fontSize: 14 }}>Fourways Vet Hospital</div><div style={{ fontSize: 11, color: "#888" }}>{currentUser.role === "vet" ? "Veterinarian" : "Nurse"} login</div></div>
+        <div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{background:B,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontWeight:700,fontSize:13}}>FVH</span></div>
+              <div><div style={{fontWeight:500,fontSize:14}}>Fourways Vet Hospital</div><div style={{fontSize:11,color:"#888"}}>{user.role==="vet"?"Veterinarian":"Nurse"} login</div></div>
             </div>
             <button style={btn(false)} onClick={logout}>Sign out</button>
           </div>
-          <div style={{ ...card, textAlign: "center", padding: "20px", marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>Who are you?</div>
-            <div style={{ fontSize: 13, color: "#888" }}>Select your name to continue</div>
+          <div style={{...card,textAlign:"center",padding:"20px",marginBottom:16}}>
+            <div style={{fontWeight:600,fontSize:16,marginBottom:4}}>Who are you?</div>
+            <div style={{fontSize:13,color:"#888"}}>Select your name to continue</div>
           </div>
-          {nameList.length === 0 && <div style={{ ...card, color: "#888", fontSize: 13, textAlign: "center" }}>No names loaded yet. Please contact admin.</div>}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(175px,1fr))", gap: 8 }}>
-            {nameList.map(name => (
-              <button key={name} onClick={() => setSelectedClinician(name)} style={{ background: "#fff", border: "0.5px solid #c8d0e0", borderRadius: 10, padding: "14px 16px", cursor: "pointer", textAlign: "left" }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: FVH_BLUE + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: FVH_BLUE, marginBottom: 8 }}>{name[0]}</div>
-                <div style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
-                <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{currentUser.role === "vet" ? "Veterinarian" : "Nurse"}</div>
+          {nameList.length===0&&<div style={{...card,color:"#888",fontSize:13,textAlign:"center"}}>No names loaded yet.</div>}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(175px,1fr))",gap:8}}>
+            {nameList.map(function(name){return (
+              <button key={name} onClick={function(){setClinician(name);}} style={{background:"#fff",border:"0.5px solid #c8d0e0",borderRadius:10,padding:"14px 16px",cursor:"pointer",textAlign:"left"}}>
+                <div style={{width:32,height:32,borderRadius:"50%",background:B+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:B,marginBottom:8}}>{name[0]}</div>
+                <div style={{fontWeight:500,fontSize:13}}>{name}</div>
+                <div style={{fontSize:11,color:"#888",marginTop:2}}>{user.role==="vet"?"Veterinarian":"Nurse"}</div>
               </button>
-            ))}
+            );})}
           </div>
         </div>
       );
     }
 
     return (
-      <div style={base}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0 16px", borderBottom: "0.5px solid #dde3ee", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ background: FVH_BLUE, borderRadius: 8, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>FVH</span></div>
-            <div><div style={{ fontWeight: 500, fontSize: 14 }}>{selectedClinician}</div><div style={{ fontSize: 11, color: "#888" }}><span style={{ ...tag(ROLE_COLORS[currentUser.role] || "#888"), fontSize: 10 }}>{currentUser.role}</span></div></div>
+      <div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{background:B,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontWeight:700,fontSize:13}}>FVH</span></div>
+            <div><div style={{fontWeight:500,fontSize:14}}>{clinician}</div><div style={{fontSize:11,color:"#888"}}><span style={{...tag(B),fontSize:10}}>{user.role}</span></div></div>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={{ ...btn(false), fontSize: 12 }} onClick={() => setSelectedClinician(null)}>Change name</button>
-            <button style={btn(false)} onClick={() => { setSelectedClinician(null); logout(); }}>Sign out</button>
+          <div style={{display:"flex",gap:8}}>
+            <button style={{...btn(false),fontSize:12}} onClick={function(){setClinician(null);}}>Change name</button>
+            <button style={btn(false)} onClick={function(){setClinician(null);logout();}}>Sign out</button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-          {["approvals","roster"].map(t => <button key={t} style={btn(vetTab === t)} onClick={() => setVetTab(t)}>{t === "approvals" ? "Approvals" + (pendingEvents.length > 0 ? " (" + pendingEvents.length + ")" : "") : "Today's Roster"}</button>)}
+        <div style={{display:"flex",gap:6,marginBottom:16}}>
+          {["approvals","roster"].map(function(t){return <button key={t} style={btn(vetTab===t)} onClick={function(){setVetTab(t);}}>{t==="approvals"?"Approvals"+(pendEvs.length>0?" ("+pendEvs.length+")":""):"Today's Roster"}</button>;})}
         </div>
-        {vetTab === "approvals" && (
+        {vetTab==="approvals"&&(
           <div>
-            <div style={{ fontWeight: 500, marginBottom: 12 }}>Pending approvals</div>
-            {pendingEvents.length === 0 && <div style={{ color: "#888", fontSize: 13 }}>No pending approvals</div>}
-            {pendingEvents.map(ev => { const sh = shifts.find(s => s.id === ev.shiftId); const member = sh ? staffState.find(st => st.id === sh.staffId) : null; const col = sh ? getShiftColor(sh.shiftType, sh.year, sh.month, sh.day) : SC.morning; return <div key={ev.id} style={{ ...card, borderLeft: "4px solid " + col.border }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><div><div style={{ fontWeight: 500 }}>{member && member.name}</div><div style={{ fontSize: 12, color: col.text }}>{sh && sh.shiftLabel} - {sh && sh.shiftTime}</div><div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>In: {fmtDT(ev.clockIn)} - Out: {fmtDT(ev.clockOut)} - {calcHours(ev.clockIn, ev.clockOut).toFixed(2)}h</div><div style={{ fontSize: 11, color: "#888", fontStyle: "italic" }}>Approving as: {selectedClinician}</div></div><button style={{ ...btn(true), background: "#0f6e56", border: "none", padding: "8px 16px" }} onClick={() => approve(ev.id, selectedClinician)}>Approve</button></div></div>; })}
+            <div style={{fontWeight:500,marginBottom:12}}>Pending approvals</div>
+            {pendEvs.length===0&&<div style={{color:"#888",fontSize:13}}>No pending approvals</div>}
+            {pendEvs.map(function(ev){const sh=shifts.find(function(s){return s.id===ev.shiftId;});const mem=sh?staff.find(function(s){return s.id===sh.staffId;}):null;const col=sh?shiftColor(sh.shiftType,sh.year,sh.month,sh.day):SC.morning;return <div key={ev.id} style={{...card,borderLeft:"4px solid "+col.border}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:500}}>{mem&&mem.name}</div><div style={{fontSize:12,color:col.text}}>{sh&&sh.shiftLabel} - {sh&&sh.shiftTime}</div><div style={{fontSize:11,color:"#888",marginTop:2}}>In: {fmt(ev.clockIn)} - Out: {fmt(ev.clockOut)} - {calcH(ev.clockIn,ev.clockOut).toFixed(2)}h</div><div style={{fontSize:11,color:"#888",fontStyle:"italic"}}>Approving as: {clinician}</div></div><button style={{...btn(true),background:"#0f6e56",border:"none",padding:"8px 16px"}} onClick={function(){approve(ev.id,clinician);}}>Approve</button></div></div>;})}
           </div>
         )}
-        {vetTab === "roster" && (
+        {vetTab==="roster"&&(
           <div>
-            <div style={{ fontWeight: 500, marginBottom: 12 }}>Today - {today.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>
-            {todayShifts.length === 0 && <div style={{ color: "#888", fontSize: 13 }}>No shifts today</div>}
-            {todayShifts.map(sh => { const m = staffState.find(st => st.id === sh.staffId); const ev = clockEvents.find(c => c.shiftId === sh.id); const col = getShiftColor(sh.shiftType, sh.year, sh.month, sh.day); return <div key={sh.id} style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center", borderLeft: "4px solid " + col.border }}><div><div style={{ fontWeight: 500 }}>{m && m.name}</div><div style={{ fontSize: 12, color: col.text }}>{sh.shiftTime} - {sh.station}</div></div><div>{ev && ev.approved ? <span style={tag("#0f6e56")}>Approved</span> : ev && ev.clockOut ? <span style={tag("#378add")}>Clocked out</span> : ev && ev.clockIn ? <span style={tag("#ba7517")}>Clocked in</span> : <span style={{ color: "#888", fontSize: 12 }}>Not clocked in</span>}</div></div>; })}
+            <div style={{fontWeight:500,marginBottom:12}}>Today - {today.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
+            {tds.length===0&&<div style={{color:"#888",fontSize:13}}>No shifts today</div>}
+            {tds.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{...card,display:"flex",justifyContent:"space-between",alignItems:"center",borderLeft:"4px solid "+col.border}}><div><div style={{fontWeight:500}}>{m&&m.name}</div><div style={{fontSize:12,color:col.text}}>{sh.shiftTime} - {sh.station}</div></div><div>{ev&&ev.approved?<span style={tag("#0f6e56")}>Approved</span>:ev&&ev.clockOut?<span style={tag("#378add")}>Clocked out</span>:ev&&ev.clockIn?<span style={tag("#ba7517")}>Clocked in</span>:<span style={{color:"#888",fontSize:12}}>Not clocked in</span>}</div></div>;})}
           </div>
         )}
       </div>
@@ -969,7 +858,7 @@ function App() {
   return null;
 }
 
-ReactDOM.render(React.createElement(App), document.getElementById("root"));
+ReactDOM.render(React.createElement(App, null), document.getElementById("root"));
 </script>
 </body>
 </html>

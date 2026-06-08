@@ -89,39 +89,28 @@ const AFTERNOON_ROTATION = [
 ];
 
 const MORNING_STAFF = [
-  { name: "Natasha", shiftType: "morning_early",  shiftLabel: "Morning Early",  shiftTime: "06:00-12:00" },
-  { name: "Sandy",   shiftType: "morning_extra",  shiftLabel: "Morning Extra",  shiftTime: "07:00-11:00" },
-  { name: "Juvanne", shiftType: "afternoon_main", shiftLabel: "Afternoon Main", shiftTime: "08:00-16:30" },
+  { name: "Natasha",  shiftType: "morning_early",  shiftLabel: "Morning Early",  shiftTime: "06:00-12:00" },
+  { name: "Sandy",    shiftType: "morning_extra",  shiftLabel: "Morning Extra",  shiftTime: "07:00-11:00" },
+  { name: "Nicole",   shiftType: "afternoon_main", shiftLabel: "Afternoon Main", shiftTime: "08:00-16:30" },
 ];
 const AFTERNOON_STAFF = [
-  { name: "Leandra", shiftType: "afternoon_main", shiftLabel: "Afternoon 11:00", shiftTime: "11:00-19:30" },
-  { name: "Ayanda",  shiftType: "afternoon_main", shiftLabel: "Afternoon 11:30", shiftTime: "11:30-20:00" },
-  { name: "Edith",   shiftType: "afternoon_main", shiftLabel: "Afternoon 12:00", shiftTime: "12:00-20:30" },
+  { name: "Paige M",  shiftType: "afternoon_main", shiftLabel: "Afternoon 11:00", shiftTime: "11:00-19:30" },
+  { name: "Karrighan",shiftType: "afternoon_main", shiftLabel: "Afternoon 11:30", shiftTime: "11:30-20:00" },
+  { name: "Edith",    shiftType: "afternoon_main", shiftLabel: "Afternoon 12:00", shiftTime: "12:00-20:30" },
 ];
 
 const INITIAL_STAFF = [
   { id: 1,  name: "Natasha",    role: "receptionist", hourlyRate: 45, pin: "1111" },
   { id: 2,  name: "Sandy",      role: "receptionist", hourlyRate: 45, pin: "2222" },
-  { id: 3,  name: "Juvanne",    role: "receptionist", hourlyRate: 45, pin: "3333" },
-  { id: 4,  name: "Leandra",    role: "receptionist", hourlyRate: 45, pin: "4444" },
-  { id: 5,  name: "Ayanda",     role: "receptionist", hourlyRate: 45, pin: "5555" },
   { id: 6,  name: "Nicole",     role: "receptionist", hourlyRate: 45, pin: "6666" },
   { id: 7,  name: "Edith",      role: "receptionist", hourlyRate: 45, pin: "7777" },
   { id: 8,  name: "Karrighan",  role: "receptionist", hourlyRate: 45, pin: "8888" },
   { id: 9,  name: "Paige M",    role: "receptionist", hourlyRate: 45, pin: "9999" },
-  { id: 10, name: "Brody",      role: "receptionist", hourlyRate: 45, pin: "1010" },
-  { id: 11, name: "Chris",      role: "receptionist", hourlyRate: 45, pin: "1011" },
-  { id: 12, name: "Caleb",      role: "receptionist", hourlyRate: 45, pin: "1012" },
   { id: 13, name: "Lesa",       role: "receptionist", hourlyRate: 45, pin: "1013" },
   { id: 14, name: "Taryn C",    role: "receptionist", hourlyRate: 45, pin: "1014" },
   { id: 15, name: "Taryn V",    role: "receptionist", hourlyRate: 45, pin: "1015" },
-  { id: 16, name: "Amo",        role: "receptionist", hourlyRate: 45, pin: "1016" },
   { id: 17, name: "Marlena",    role: "receptionist", hourlyRate: 45, pin: "1017" },
   { id: 18, name: "Lebo",       role: "receptionist", hourlyRate: 45, pin: "1018" },
-  { id: 19, name: "Jaimee",     role: "receptionist", hourlyRate: 45, pin: "1019" },
-  { id: 20, name: "Tricia",     role: "receptionist", hourlyRate: 45, pin: "1020" },
-  { id: 21, name: "Refilwe",    role: "receptionist", hourlyRate: 45, pin: "1021" },
-  { id: 22, name: "Cathleen",   role: "receptionist", hourlyRate: 45, pin: "1022" },
   { id: 23, name: "Matthew",    role: "receptionist", hourlyRate: 45, pin: "1023" },
   { id: 24, name: "Vet Login",  role: "vet",   hourlyRate: 0, pin: "0001" },
   { id: 25, name: "Nurse Login",role: "nurse", hourlyRate: 0, pin: "0002" },
@@ -323,7 +312,9 @@ function App() {
     setEditRateId(null); setEditRateVal("");
   };
 
-  const getPayrollData = (month, year) => receptionists.map(r => {
+  const deleteStaffMember = (id) => {
+    db.ref("staff/" + id).remove();
+  }; = (month, year) => receptionists.map(r => {
     const ms = shifts.filter(s => s.staffId === r.id && s.month === month && s.year === year);
     let totalHours = 0;
     ms.forEach(sh => { const ev = clockEvents.find(c => c.shiftId === sh.id && c.clockOut); if (ev) totalHours += calcHours(ev.clockIn, ev.clockOut); });
@@ -869,6 +860,7 @@ function App() {
                           <button style={{ ...btn(false), padding: "5px 12px", fontSize: 12 }} onClick={() => { setEditRateId(m.id); setEditRateVal(m.hourlyRate); }}>Edit rate</button>
                         </>
                       )}
+                      <button style={{ ...btn(false), padding: "5px 10px", fontSize: 12, color: "#c0392b" }} onClick={() => { if (window.confirm("Remove " + m.name + "?")) deleteStaffMember(m.id); }}>Delete</button>
                     </div>
                   )}
                 </div>

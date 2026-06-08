@@ -733,25 +733,26 @@ function renderAdmin(app){
   // Modals
   var recs2=state.staff.filter(function(s){return s.role==="receptionist";});
   if(state.shiftMod){
-    var mod=modalEl("Add shift - "+new Date(state.shiftMod.year,state.shiftMod.month,state.shiftMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"}),[
+    var staffOpts=[{value:"",label:"Select..."}];
+    for(var ri=0;ri<recs2.length;ri++){staffOpts.push({value:recs2[ri].id,label:recs2[ri].name});}
+    var shiftOpts=[{value:"",label:"Select..."}];
+    for(var si=0;si<SHIFT_TYPES.length;si++){shiftOpts.push({value:SHIFT_TYPES[si].id,label:SHIFT_TYPES[si].label+" "+SHIFT_TYPES[si].time});}
+    var modChildren=[
       e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Staff member"]),
-      sel(state.newShift.staffId,[{value:"",label:"Select..."}].concat(recs2.map(function(r){return {value:r.id,label:r.name};})),function(v){state.newShift.staffId=v;},true),
-      e("br",{},[]),e("br",{},[]),
-      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Shift type"]),
-      var shiftOptions=[{value:"",label:"Select..."}];
-      for(var si=0;si<SHIFT_TYPES.length;si++){
-        shiftOptions.push({value:SHIFT_TYPES[si].id,label:SHIFT_TYPES[si].label+" "+SHIFT_TYPES[si].time});
-      }
-      sel(state.newShift.shiftType,shiftOptions,function(v){state.newShift.shiftType=v;},true),
-      e("br",{},[]),e("br",{},[]),
-      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Station"]),
+      sel(state.newShift.staffId,staffOpts,function(v){state.newShift.staffId=v;},true),
+      e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginTop:"10px",marginBottom:"4px"}},["Shift type"]),
+      sel(state.newShift.shiftType,shiftOpts,function(v){state.newShift.shiftType=v;},true),
+      e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginTop:"10px",marginBottom:"4px"}},["Station"]),
       sel(state.newShift.station,STATIONS,function(v){state.newShift.station=v;},true),
-      e("br",{},[]),e("br",{},[]),
-      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Note"]),
+      e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginTop:"10px",marginBottom:"4px"}},["Note"]),
       inp(state.newShift.note,function(v){state.newShift.note=v;},"text","",true),
-      e("br",{},[]),e("br",{},[]),
-      div({display:"flex",gap:"8px"},[btn("Add Shift",true,addShift),btn("Cancel",false,function(){set({shiftMod:null});})])
-    ],function(){set({shiftMod:null});});
+      e("br",{},[]),
+      div({display:"flex",gap:"8px",marginTop:"12px"},[btn("Add Shift",true,addShift),btn("Cancel",false,function(){set({shiftMod:null});})])
+    ];
+    var mod=modalEl("Add shift - "+new Date(state.shiftMod.year,state.shiftMod.month,state.shiftMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"}),modChildren,function(){set({shiftMod:null});});
     app.appendChild(mod);
   }
   if(state.sbMod){

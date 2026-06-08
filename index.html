@@ -1,72 +1,75 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>FVH Shift Manager</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; background: #f2f4f8; color: #1a1a2e; min-height: 100vh; }
-#root { max-width: 920px; margin: 0 auto; padding: 20px 16px; }
-input, select, textarea { font-family: inherit; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f2f4f8;color:#1a1a2e;min-height:100vh}
+#app{max-width:920px;margin:0 auto;padding:20px 16px}
+input,select,textarea{font-family:inherit}
+.card{background:#fff;border:0.5px solid #dde3ee;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.btn{padding:7px 14px;border-radius:8px;border:0.5px solid #c8d0e0;cursor:pointer;font-size:13px;background:#f0f3fa;color:#1a1a2e;font-weight:400}
+.btn-primary{background:#1e3a6e;color:#fff;border:none;font-weight:500}
+.inp{padding:7px 10px;border-radius:8px;border:0.5px solid #c8d0e0;font-size:13px;width:100%;background:#f8f9fc;color:#1a1a2e;font-family:inherit}
+.inp-dark{padding:7px 10px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.3);font-size:13px;width:100%;background:rgba(255,255,255,0.15);color:#fff;font-family:inherit}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal-box{background:#1e3a6e;border-radius:14px;padding:20px 24px;width:360px;position:relative;max-height:85vh;overflow-y:auto}
+.modal-label{font-size:12px;color:rgba(255,255,255,0.75);display:block;margin-bottom:4px}
+.grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.flex{display:flex;align-items:center}
+.gap6{gap:6px}
+.gap8{gap:8px}
+h2{font-size:14px;font-weight:500;margin-bottom:12px}
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="app"><div style="text-align:center;padding:60px 0;color:#888">Connecting to database...</div></div>
+
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyAeycR2dnoWeKxskAL7L1GA-IjWo4ScThU",
-  authDomain: "fvh-shift-manager.firebaseapp.com",
-  databaseURL: "https://fvh-shift-manager-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "fvh-shift-manager",
-  storageBucket: "fvh-shift-manager.firebasestorage.app",
-  messagingSenderId: "630438354118",
-  appId: "1:630438354118:web:76eb02fecb40475046cbc7"
+  apiKey:"AIzaSyAeycR2dnoWeKxskAL7L1GA-IjWo4ScThU",
+  authDomain:"fvh-shift-manager.firebaseapp.com",
+  databaseURL:"https://fvh-shift-manager-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"fvh-shift-manager",
+  storageBucket:"fvh-shift-manager.firebasestorage.app",
+  messagingSenderId:"630438354118",
+  appId:"1:630438354118:web:76eb02fecb40475046cbc7"
 });
 var db = firebase.database();
-</script>
-<script type="text/babel" data-presets="react">
-const { useState, useEffect } = React;
-const B = "#1e3a6e";
 
-const SHIFTS = [
+// ── DATA ────────────────────────────────────────────────────────
+var B = "#1e3a6e";
+var SC = {
+  morning:  {bg:"#FEF3C7",text:"#92400E",border:"#F59E0B",label:"Morning"},
+  afternoon:{bg:"#D1FAE5",text:"#065F46",border:"#10B981",label:"Afternoon"},
+  night:    {bg:"#EDE9FE",text:"#4C1D95",border:"#7C3AED",label:"Night"},
+  weekend:  {bg:"#FFE4E6",text:"#9F1239",border:"#F43F5E",label:"Weekend"}
+};
+var SBC = {bg:"#FFF7ED",text:"#7C2D12",border:"#EA580C"};
+var SHIFT_TYPES = [
   {id:"morning_early",label:"Morning Early",time:"06:00-12:00",cat:"morning"},
   {id:"morning_extra",label:"Morning Extra",time:"07:00-11:00",cat:"morning"},
   {id:"morning_standard",label:"Morning Standard",time:"06:00-13:00",cat:"morning"},
   {id:"afternoon_main",label:"Afternoon Main",time:"08:00-16:30",cat:"afternoon"},
   {id:"afternoon_extra",label:"Afternoon Extra",time:"09:00-13:00",cat:"afternoon"},
-  {id:"night_weekday",label:"Night Weekday",time:"15:30-24:00",cat:"night"},
-  {id:"night_weekend",label:"Night Weekend",time:"18:00-24:00",cat:"weekend"},
   {id:"night_1100",label:"Night 11:00",time:"11:00-19:30",cat:"night"},
   {id:"night_1130",label:"Night 11:30",time:"11:30-20:00",cat:"night"},
   {id:"night_1200",label:"Night 12:00",time:"12:00-20:30",cat:"night"},
+  {id:"night_weekday",label:"Night Weekday",time:"15:30-24:00",cat:"night"},
+  {id:"night_weekend",label:"Night Weekend",time:"18:00-24:00",cat:"weekend"}
 ];
-
-const SC = {
-  morning:   {bg:"#FEF3C7",text:"#92400E",border:"#F59E0B",label:"Morning"},
-  afternoon: {bg:"#D1FAE5",text:"#065F46",border:"#10B981",label:"Afternoon"},
-  night:     {bg:"#EDE9FE",text:"#4C1D95",border:"#7C3AED",label:"Night"},
-  weekend:   {bg:"#FFE4E6",text:"#9F1239",border:"#F43F5E",label:"Weekend"},
-};
-const SBC = {bg:"#FFF7ED",text:"#7C2D12",border:"#EA580C"};
-
-function shiftColor(type, y, m, d) {
-  const dow = new Date(y,m,d).getDay();
-  if (dow===0||dow===6) return SC.weekend;
-  const t = SHIFTS.find(s=>s.id===type);
-  return SC[t?t.cat:"morning"]||SC.morning;
-}
-
-const STATIONS = ["H - Hospital","M - Middle","R - Retail","R2 - Retail 2","-"];
-const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-const STAFF0 = [
+var STATIONS = ["H - Hospital","M - Middle","R - Retail","R2 - Retail 2","-"];
+var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+var VETS = ["Frikkie Strydom","Johan Nel","Neels Du Plessis","Robyn Bester","Farai Munjere","Estee Van Zyl","Terri Shields","Myra Marais","Jason Mory","Roland Ryf","Adolf Makotose","Biance Ambrose","Shria Samson","Aadila Ahmed","Erin Bouwer","Lauren Daisley","Knowledge Taonezvi"];
+var NURSES = [];
+var STAFF0 = [
   {id:1,name:"Natasha",role:"receptionist",hourlyRate:45,pin:"1111"},
   {id:2,name:"Sandy",role:"receptionist",hourlyRate:45,pin:"2222"},
   {id:6,name:"Nicole",role:"receptionist",hourlyRate:45,pin:"6666"},
@@ -80,785 +83,725 @@ const STAFF0 = [
   {id:18,name:"Lebo",role:"receptionist",hourlyRate:45,pin:"1018"},
   {id:23,name:"Matthew",role:"receptionist",hourlyRate:45,pin:"1023"},
   {id:24,name:"Vet Login",role:"vet",hourlyRate:0,pin:"0001"},
-  {id:25,name:"Nurse Login",role:"nurse",hourlyRate:0,pin:"0002"},
+  {id:25,name:"Nurse Login",role:"nurse",hourlyRate:0,pin:"0002"}
 ];
-
-const VETS = ["Frikkie Strydom","Johan Nel","Neels Du Plessis","Robyn Bester","Farai Munjere","Estee Van Zyl","Terri Shields","Myra Marais","Jason Mory","Roland Ryf","Adolf Makotose","Biance Ambrose","Shria Samson","Aadila Ahmed","Erin Bouwer","Lauren Daisley","Knowledge Taonezvi"];
-const NURSES = [];
-
-const RULES0 = [
-  {id:"r1",title:"Standby Protocol",content:"If you are on Standby, please ensure that you are close to home and have everything prepared so that you can arrive ASAP.\n\nIf the standby is needed, you will be notified.\n\nIf you are called in to work, you will be paid for your shift.\n\nThe Standby is there to provide cover in the event of an emergency and for no other reason."},
+var RULES0 = [
+  {id:"r1",title:"Standby Protocol",content:"Stay close to home. Be ready to arrive ASAP.\nYou will be notified if needed.\nYou will be paid if called in.\nStandby is for emergencies only."},
   {id:"r2",title:"Lunch Times",content:"Nicole: 14:00-14:30\nPaige M: 15:30-16:00\nKarrighan: 16:00-16:30\nEdith: 18:45-19:15"},
-  {id:"r3",title:"Clock-In Policy",content:"All staff must clock in upon arrival using the digital system.\n\nClock-out must be completed before leaving the premises."},
-  {id:"r4",title:"Shift Swaps",content:"All shift swaps must be arranged through admin only."},
+  {id:"r3",title:"Clock-In Policy",content:"Clock in on arrival. Clock out before leaving.\nContact supervisor if unable to clock in."},
+  {id:"r4",title:"Shift Swaps",content:"All shift swaps must go through admin only."}
 ];
+var MR=[["M - Middle","R - Retail","H - Hospital"],["M - Middle","R - Retail","H - Hospital"],["R - Retail","H - Hospital","M - Middle"],["H - Hospital","M - Middle","R - Retail"]];
+var AR=[["H - Hospital","M - Middle","H - Hospital"],["H - Hospital","M - Middle","H - Hospital"],["H - Hospital","R - Retail","M - Middle"],["M - Middle","H - Hospital","R - Retail"]];
+var MS=[{name:"Natasha",type:"morning_early",label:"Morning Early",time:"06:00-12:00"},{name:"Sandy",type:"morning_extra",label:"Morning Extra",time:"07:00-11:00"},{name:"Nicole",type:"afternoon_main",label:"Afternoon Main",time:"08:00-16:30"}];
+var AS=[{name:"Paige M",type:"afternoon_main",label:"Afternoon 11:00",time:"11:00-19:30"},{name:"Karrighan",type:"afternoon_main",label:"Afternoon 11:30",time:"11:30-20:00"},{name:"Edith",type:"afternoon_main",label:"Afternoon 12:00",time:"12:00-20:30"}];
 
-const MR = [["M - Middle","R - Retail","H - Hospital"],["M - Middle","R - Retail","H - Hospital"],["R - Retail","H - Hospital","M - Middle"],["H - Hospital","M - Middle","R - Retail"]];
-const AR = [["H - Hospital","M - Middle","H - Hospital"],["H - Hospital","M - Middle","H - Hospital"],["H - Hospital","R - Retail","M - Middle"],["M - Middle","H - Hospital","R - Retail"]];
-const MS = [{name:"Natasha",type:"morning_early",label:"Morning Early",time:"06:00-12:00"},{name:"Sandy",type:"morning_extra",label:"Morning Extra",time:"07:00-11:00"},{name:"Nicole",type:"afternoon_main",label:"Afternoon Main",time:"08:00-16:30"}];
-const AS = [{name:"Paige M",type:"afternoon_main",label:"Afternoon 11:00",time:"11:00-19:30"},{name:"Karrighan",type:"afternoon_main",label:"Afternoon 11:30",time:"11:30-20:00"},{name:"Edith",type:"afternoon_main",label:"Afternoon 12:00",time:"12:00-20:30"}];
+// ── STATE ───────────────────────────────────────────────────────
+var state = {
+  user:null, loginName:"", loginPin:"", loginErr:"",
+  staff:STAFF0.slice(), shifts:[], standbys:[], clocks:[], rules:RULES0.slice(),
+  ready:false, genMonths:[],
+  adminTab:"dashboard", recTab:"overview", vetTab:"approvals", clinician:null,
+  vm:new Date().getMonth(), vy:new Date().getFullYear(),
+  selDay:null, wkOff:0, payM:new Date().getMonth(), payY:new Date().getFullYear(),
+  subTab:"roster",
+  editRateId:null, editRateVal:"",
+  shiftMod:null, sbMod:null, reallocMod:null, ruleMod:null, addStaffOpen:false,
+  newShift:{staffId:"",shiftType:"morning_early",station:"H - Hospital",note:""},
+  newSb:{staffId:"",note:""},
+  newRule:{title:"",content:""},
+  newStaff:{name:"",role:"receptionist",hourlyRate:45,pin:""},
+  reallocTo:""
+};
 
+// ── HELPERS ─────────────────────────────────────────────────────
+function genId(){return Math.random().toString(36).substr(2,9);}
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 function firstDay(y,m){return new Date(y,m,1).getDay();}
-function genId(){return Math.random().toString(36).substr(2,9);}
 function calcH(i,o){if(!i||!o)return 0;return Math.round((new Date(o)-new Date(i))/3600000*100)/100;}
-function fmt(iso){if(!iso)return"-";return new Date(iso).toLocaleString("en-ZA",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});}
-
-function genRecurring(month, year, staffList) {
-  const result = [];
-  const days = daysInMonth(year, month);
-  let wk = 0;
-  for (let day = 1; day <= days; day++) {
-    const dow = new Date(year, month, day).getDay();
-    if (dow === 1) wk++;
-    if (dow === 0 || dow === 6) continue;
-    const wi = Math.min(wk, 4) - 1;
-    const mr = MR[Math.max(wi,0)] || MR[0];
-    const ar = AR[Math.max(wi,0)] || AR[0];
-    MS.forEach(function(sd, i) {
-      const m = staffList.find(function(s){return s.name===sd.name;});
-      if (!m) return;
-      result.push({id:genId(),staffId:m.id,day,month,year,shiftType:sd.type,shiftLabel:sd.label,shiftTime:sd.time,station:mr[i]||"H - Hospital",note:"",recurring:true});
-    });
-    AS.forEach(function(sd, i) {
-      const m = staffList.find(function(s){return s.name===sd.name;});
-      if (!m) return;
-      result.push({id:genId(),staffId:m.id,day,month,year,shiftType:sd.type,shiftLabel:sd.label,shiftTime:sd.time,station:ar[i]||"M - Middle",note:"",recurring:true});
-    });
-  }
-  return result;
+function fmt(iso){if(!iso)return "-";return new Date(iso).toLocaleString("en-ZA",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});}
+function shiftCol(type,y,m,d){var dow=new Date(y,m,d).getDay();if(dow===0||dow===6)return SC.weekend;var t=SHIFT_TYPES.find(function(s){return s.id===type;});return SC[(t?t.cat:"morning")]||SC.morning;}
+function today(){return new Date();}
+function set(key,val){
+  if(typeof key==="object"){Object.assign(state,key);}else{state[key]=val;}
+  render();
 }
 
-const today = new Date();
+// ── FIREBASE ────────────────────────────────────────────────────
+function initFirebase(){
+  db.ref("shifts").on("value",function(s){var d=s.val();state.shifts=d?Object.values(d):[];render();});
+  db.ref("standbys").on("value",function(s){var d=s.val();state.standbys=d?Object.values(d):[];render();});
+  db.ref("clockEvents").on("value",function(s){var d=s.val();state.clocks=d?Object.values(d):[];render();});
+  db.ref("rules").on("value",function(s){var d=s.val();state.rules=d?Object.values(d):RULES0.slice();render();});
+  db.ref("staff").on("value",function(s){var d=s.val();if(d)state.staff=Object.values(d);render();});
+  db.ref("genMonths").on("value",function(s){
+    var d=s.val();state.genMonths=d?Object.values(d):[];state.ready=true;
+    db.ref("staff").once("value").then(function(ss){if(!ss.val()){STAFF0.forEach(function(m){db.ref("staff/"+m.id).set(m);});}});
+    db.ref("rules").once("value").then(function(ss){if(!ss.val()){RULES0.forEach(function(r){db.ref("rules/"+r.id).set(r);});}});
+    genRecurringIfNeeded();
+    render();
+  });
+}
 
-function App() {
-  const [user, setUser] = useState(null);
-  const [loginName, setLoginName] = useState("");
-  const [loginPin, setLoginPin] = useState("");
-  const [loginErr, setLoginErr] = useState("");
-  const [staff, setStaff] = useState(STAFF0);
-  const [shifts, setShifts] = useState([]);
-  const [standbys, setStandbys] = useState([]);
-  const [clocks, setClocks] = useState([]);
-  const [rules, setRules] = useState(RULES0);
-  const [ready, setReady] = useState(false);
-  const [genMonths, setGenMonths] = useState([]);
-  const [adminTab, setAdminTab] = useState("dashboard");
-  const [recTab, setRecTab] = useState("overview");
-  const [vetTab, setVetTab] = useState("approvals");
-  const [clinician, setClinician] = useState(null);
-  const [vm, setVm] = useState(today.getMonth());
-  const [vy, setVy] = useState(today.getFullYear());
-  const [selDay, setSelDay] = useState(null);
-  const [wkOff, setWkOff] = useState(0);
-  const [shiftMod, setShiftMod] = useState(null);
-  const [sbMod, setSbMod] = useState(null);
-  const [reallocMod, setReallocMod] = useState(null);
-  const [ruleMod, setRuleMod] = useState(null);
-  const [addStaffOpen, setAddStaffOpen] = useState(false);
-  const [payM, setPayM] = useState(today.getMonth());
-  const [payY, setPayY] = useState(today.getFullYear());
-  const [subTab, setSubTab] = useState("roster");
-  const [editRateId, setEditRateId] = useState(null);
-  const [editRateVal, setEditRateVal] = useState("");
-  const [newShift, setNewShift] = useState({staffId:"",shiftType:"morning_early",station:"H - Hospital",note:""});
-  const [newSb, setNewSb] = useState({staffId:"",note:""});
-  const [newRule, setNewRule] = useState({title:"",content:""});
-  const [newStaff, setNewStaff] = useState({name:"",role:"receptionist",hourlyRate:45,pin:""});
-  const [reallocTo, setReallocTo] = useState("");
-
-  useEffect(function() {
-    db.ref("shifts").on("value", function(s){const d=s.val();setShifts(d?Object.values(d):[]); });
-    db.ref("standbys").on("value", function(s){const d=s.val();setStandbys(d?Object.values(d):[]);});
-    db.ref("clockEvents").on("value", function(s){const d=s.val();setClocks(d?Object.values(d):[]);});
-    db.ref("rules").on("value", function(s){const d=s.val();setRules(d?Object.values(d):RULES0);});
-    db.ref("staff").on("value", function(s){const d=s.val();if(d)setStaff(Object.values(d));});
-    db.ref("genMonths").on("value", function(s){const d=s.val();setGenMonths(d?Object.values(d):[]);setReady(true);});
-  }, []);
-
-  useEffect(function() {
-    if (!ready) return;
-    db.ref("staff").once("value").then(function(s){if(!s.val()){STAFF0.forEach(function(m){db.ref("staff/"+m.id).set(m);});}});
-    db.ref("rules").once("value").then(function(s){if(!s.val()){RULES0.forEach(function(r){db.ref("rules/"+r.id).set(r);});}});
-  }, [ready]);
-
-  useEffect(function() {
-    if (!ready) return;
-    const key = vm+"-"+vy;
-    if (genMonths.indexOf(key) !== -1) return;
-    const ns = genRecurring(vm, vy, STAFF0);
-    ns.forEach(function(s){db.ref("shifts/"+s.id).set(s);});
-    db.ref("genMonths/"+key.replace("-","_")).set(key);
-  }, [vm, vy, ready]);
-
-  const recs = staff.filter(function(s){return s.role==="receptionist";});
-
-  function login() {
-    const f = staff.find(function(s){return s.name.toLowerCase()===loginName.toLowerCase()&&s.pin===loginPin;});
-    if (f){setUser(f);setLoginErr("");}
-    else if (loginName==="admin"&&loginPin==="admin123"){setUser({id:0,name:"Admin",role:"admin"});setLoginErr("");}
-    else setLoginErr("Incorrect name or PIN.");
-  }
-
-  function logout(){setUser(null);setLoginName("");setLoginPin("");setClinician(null);}
-
-  function dayShifts(d,m,y){return shifts.filter(function(s){return s.day===d&&s.month===m&&s.year===y;});}
-  function daySBs(d,m,y){return standbys.filter(function(s){return s.day===d&&s.month===m&&s.year===y;});}
-  function myShifts(uid){return shifts.filter(function(s){return s.staffId===uid;});}
-  function mySBs(uid){return standbys.filter(function(s){return s.staffId===uid;});}
-
-  function clockIn(shiftId){
-    if(clocks.find(function(c){return c.shiftId===shiftId&&!c.clockOut;}))return;
-    const ev={id:genId(),shiftId,clockIn:new Date().toISOString(),clockOut:null,approved:false};
-    db.ref("clockEvents/"+ev.id).set(ev);
-  }
-  function clockOut(shiftId){
-    const ev=clocks.find(function(c){return c.shiftId===shiftId&&!c.clockOut;});
-    if(ev)db.ref("clockEvents/"+ev.id).update({clockOut:new Date().toISOString()});
-  }
-  function approve(evId,by){db.ref("clockEvents/"+evId).update({approved:true,approvedBy:by});}
-  function delShift(id){db.ref("shifts/"+id).remove();}
-  function delSB(id){db.ref("standbys/"+id).remove();}
-  function delRule(id){db.ref("rules/"+id).remove();}
-  function delStaff(id){db.ref("staff/"+id).remove();}
-
-  function addShift(){
-    if(!newShift.staffId||!shiftMod)return;
-    const t=SHIFTS.find(function(x){return x.id===newShift.shiftType;});
-    const s={id:genId(),staffId:parseInt(newShift.staffId),day:shiftMod.day,month:shiftMod.month,year:shiftMod.year,shiftType:newShift.shiftType,shiftLabel:t.label,shiftTime:t.time,station:newShift.station,note:newShift.note};
-    db.ref("shifts/"+s.id).set(s);
-    setShiftMod(null);setNewShift({staffId:"",shiftType:"morning_early",station:"H - Hospital",note:""});
-  }
-  function addSB(){
-    if(!newSb.staffId||!sbMod)return;
-    const s={id:genId(),staffId:parseInt(newSb.staffId),day:sbMod.day,month:sbMod.month,year:sbMod.year,note:newSb.note};
-    db.ref("standbys/"+s.id).set(s);
-    setSbMod(null);setNewSb({staffId:"",note:""});
-  }
-  function doRealloc(){
-    if(!reallocTo||!reallocMod)return;
-    db.ref("shifts/"+reallocMod.id).update({staffId:parseInt(reallocTo)});
-    setReallocMod(null);setReallocTo("");
-  }
-  function saveRule(){
-    const r=ruleMod==="new"?{id:genId(),...newRule}:{id:ruleMod,...newRule};
-    db.ref("rules/"+r.id).set(r);
-    setRuleMod(null);setNewRule({title:"",content:""});
-  }
-  function saveStaff(){
-    if(!newStaff.name||!newStaff.pin)return;
-    const s={...newStaff,id:Date.now(),hourlyRate:parseFloat(newStaff.hourlyRate)};
-    db.ref("staff/"+s.id).set(s);
-    setAddStaffOpen(false);setNewStaff({name:"",role:"receptionist",hourlyRate:45,pin:""});
-  }
-  function saveRate(id){
-    const v=parseFloat(editRateVal);
-    if(!isNaN(v)&&v>=0)db.ref("staff/"+id).update({hourlyRate:v});
-    setEditRateId(null);setEditRateVal("");
-  }
-
-  function payroll(m,y){
-    return recs.map(function(r){
-      const ms=shifts.filter(function(s){return s.staffId===r.id&&s.month===m&&s.year===y;});
-      let h=0;
-      ms.forEach(function(sh){const ev=clocks.find(function(c){return c.shiftId===sh.id&&c.clockOut;});if(ev)h+=calcH(ev.clockIn,ev.clockOut);});
-      return Object.assign({},r,{hrs:Math.round(h*100)/100,pay:Math.round(h*r.hourlyRate*100)/100,cnt:ms.length});
+function genRecurringIfNeeded(){
+  var key=state.vm+"-"+state.vy;
+  if(state.genMonths.indexOf(key)!==-1)return;
+  var days=daysInMonth(state.vy,state.vm);
+  var wk=0;
+  for(var day=1;day<=days;day++){
+    var dow=new Date(state.vy,state.vm,day).getDay();
+    if(dow===1)wk++;
+    if(dow===0||dow===6)continue;
+    var wi=Math.min(wk,4)-1;
+    var mr=MR[Math.max(wi,0)]||MR[0];
+    var ar=AR[Math.max(wi,0)]||AR[0];
+    MS.forEach(function(sd,i){
+      var mem=STAFF0.find(function(s){return s.name===sd.name;});
+      if(!mem)return;
+      var sh={id:genId(),staffId:mem.id,day:day,month:state.vm,year:state.vy,shiftType:sd.type,shiftLabel:sd.label,shiftTime:sd.time,station:mr[i]||"H - Hospital",note:"",recurring:true};
+      db.ref("shifts/"+sh.id).set(sh);
+    });
+    AS.forEach(function(sd,i){
+      var mem=STAFF0.find(function(s){return s.name===sd.name;});
+      if(!mem)return;
+      var sh={id:genId(),staffId:mem.id,day:day,month:state.vm,year:state.vy,shiftType:sd.type,shiftLabel:sd.label,shiftTime:sd.time,station:ar[i]||"M - Middle",note:"",recurring:true};
+      db.ref("shifts/"+sh.id).set(sh);
     });
   }
+  db.ref("genMonths/"+key.replace("-","_")).set(key);
+}
 
-  // Styles
-  const card = {background:"#fff",border:"0.5px solid #dde3ee",borderRadius:12,padding:"14px 16px",marginBottom:10};
-  function btn(a){return {padding:"7px 14px",borderRadius:8,border:"0.5px solid #c8d0e0",cursor:"pointer",fontSize:13,background:a?B:"#f0f3fa",color:a?"#fff":"#1a1a2e",fontWeight:a?500:400};}
-  const mi = {padding:"7px 10px",borderRadius:8,border:"0.5px solid rgba(255,255,255,0.3)",fontSize:13,width:"100%",background:"rgba(255,255,255,0.15)",color:"#fff"};
-  const li = {padding:"7px 10px",borderRadius:8,border:"0.5px solid #c8d0e0",fontSize:13,width:"100%",background:"#f8f9fc",color:"#1a1a2e"};
-  const ml = {fontSize:12,color:"rgba(255,255,255,0.75)",display:"block",marginBottom:4};
-  function mb(p){return {padding:"9px 0",borderRadius:8,border:p?"none":"0.5px solid rgba(255,255,255,0.4)",cursor:"pointer",fontSize:13,background:p?"#fff":"transparent",color:p?B:"#fff",fontWeight:p?600:400,flex:1};}
-  function tag(c){return {display:"inline-block",padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:500,background:c+"22",color:c};}
+// ── ACTIONS ─────────────────────────────────────────────────────
+function login(){
+  var f=state.staff.find(function(s){return s.name.toLowerCase()===state.loginName.toLowerCase()&&s.pin===state.loginPin;});
+  if(f){set({user:f,loginErr:""});}
+  else if(state.loginName==="admin"&&state.loginPin==="admin123"){set({user:{id:0,name:"Admin",role:"admin"},loginErr:""});}
+  else set("loginErr","Incorrect name or PIN.");
+}
+function logout(){set({user:null,loginName:"",loginPin:"",clinician:null});}
+function clockIn(shiftId){
+  if(state.clocks.find(function(c){return c.shiftId===shiftId&&!c.clockOut;}))return;
+  var ev={id:genId(),shiftId:shiftId,clockIn:new Date().toISOString(),clockOut:null,approved:false};
+  db.ref("clockEvents/"+ev.id).set(ev);
+}
+function clockOut(shiftId){
+  var ev=state.clocks.find(function(c){return c.shiftId===shiftId&&!c.clockOut;});
+  if(ev)db.ref("clockEvents/"+ev.id).update({clockOut:new Date().toISOString()});
+}
+function approveEv(evId,by){db.ref("clockEvents/"+evId).update({approved:true,approvedBy:by});}
+function delShift(id){db.ref("shifts/"+id).remove();}
+function delSB(id){db.ref("standbys/"+id).remove();}
+function delRule(id){db.ref("rules/"+id).remove();}
+function delStaff(id){if(confirm("Remove staff member?"))db.ref("staff/"+id).remove();}
+function addShift(){
+  var ns=state.newShift;if(!ns.staffId||!state.shiftMod)return;
+  var t=SHIFT_TYPES.find(function(x){return x.id===ns.shiftType;});
+  var s={id:genId(),staffId:parseInt(ns.staffId),day:state.shiftMod.day,month:state.shiftMod.month,year:state.shiftMod.year,shiftType:ns.shiftType,shiftLabel:t.label,shiftTime:t.time,station:ns.station,note:ns.note};
+  db.ref("shifts/"+s.id).set(s);
+  set({shiftMod:null,newShift:{staffId:"",shiftType:"morning_early",station:"H - Hospital",note:""}});
+}
+function addSB(){
+  var ns=state.newSb;if(!ns.staffId||!state.sbMod)return;
+  var s={id:genId(),staffId:parseInt(ns.staffId),day:state.sbMod.day,month:state.sbMod.month,year:state.sbMod.year,note:ns.note};
+  db.ref("standbys/"+s.id).set(s);
+  set({sbMod:null,newSb:{staffId:"",note:""}});
+}
+function doRealloc(){
+  if(!state.reallocTo||!state.reallocMod)return;
+  db.ref("shifts/"+state.reallocMod.id).update({staffId:parseInt(state.reallocTo)});
+  set({reallocMod:null,reallocTo:""});
+}
+function saveRule(){
+  var r=state.ruleMod==="new"?{id:genId(),title:state.newRule.title,content:state.newRule.content}:{id:state.ruleMod,title:state.newRule.title,content:state.newRule.content};
+  db.ref("rules/"+r.id).set(r);
+  set({ruleMod:null,newRule:{title:"",content:""}});
+}
+function saveStaff(){
+  var ns=state.newStaff;if(!ns.name||!ns.pin)return;
+  var s={id:Date.now(),name:ns.name,role:ns.role,hourlyRate:parseFloat(ns.hourlyRate),pin:ns.pin};
+  db.ref("staff/"+s.id).set(s);
+  set({addStaffOpen:false,newStaff:{name:"",role:"receptionist",hourlyRate:45,pin:""}});
+}
+function saveRate(id){
+  var v=parseFloat(state.editRateVal);
+  if(!isNaN(v)&&v>=0)db.ref("staff/"+id).update({hourlyRate:v});
+  set({editRateId:null,editRateVal:""});
+}
 
-  function Modal({children,onClose}){
-    return (
-      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200}}>
-        <div style={{background:B,borderRadius:14,padding:"20px 24px",width:360,position:"relative",maxHeight:"85vh",overflowY:"auto"}}>
-          <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"none",border:"none",fontSize:20,cursor:"pointer",color:"rgba(255,255,255,0.7)"}}>x</button>
-          {children}
-        </div>
-      </div>
-    );
+// ── HTML HELPERS ────────────────────────────────────────────────
+function e(tag,attrs,children){
+  var el=document.createElement(tag);
+  if(attrs)Object.keys(attrs).forEach(function(k){
+    if(k==="style"&&typeof attrs[k]==="object"){Object.assign(el.style,attrs[k]);}
+    else if(k.startsWith("on")){el.addEventListener(k.slice(2).toLowerCase(),attrs[k]);}
+    else if(k==="className"){el.className=attrs[k];}
+    else el.setAttribute(k,attrs[k]);
+  });
+  if(children)children.forEach(function(c){if(c!=null&&c!==false){if(typeof c==="string"||typeof c==="number"){el.appendChild(document.createTextNode(c));}else if(c instanceof Node){el.appendChild(c);}}});
+  return el;
+}
+function div(style,children){return e("div",{style:style},children);}
+function btn(label,primary,onClick,extra){
+  var b=e("button",{className:"btn"+(primary?" btn-primary":""),onclick:onClick},typeof label==="string"?[label]:label);
+  if(extra)Object.assign(b.style,extra);
+  return b;
+}
+function inp(value,onChange,type,placeholder,dark){
+  var i=e("input",{className:dark?"inp-dark":"inp",type:type||"text",value:value||"",placeholder:placeholder||""});
+  i.addEventListener("input",function(ev){onChange(ev.target.value);});
+  return i;
+}
+function sel(value,options,onChange,dark){
+  var s=e("select",{className:dark?"inp-dark":"inp"});
+  options.forEach(function(o){
+    var val=typeof o==="object"?o.value:o;
+    var lab=typeof o==="object"?o.label:o;
+    var opt=e("option",{value:val},[lab]);
+    if(val==value)opt.selected=true;
+    s.appendChild(opt);
+  });
+  s.addEventListener("change",function(ev){onChange(ev.target.value);});
+  return s;
+}
+function tag(color,text){return e("span",{style:{display:"inline-block",padding:"2px 8px",borderRadius:"6px",fontSize:"11px",fontWeight:"500",background:color+"22",color:color}},[text]);}
+function cardEl(children,extra){var d=e("div",{className:"card"},children);if(extra)Object.assign(d.style,extra);return d;}
+
+function shiftCard(sh,showName,showActions,onClockIn,onClockOut,onRealloc,onRemove){
+  var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);
+  var ev=state.clocks.find(function(c){return c.shiftId===sh.id;});
+  var mem=state.staff.find(function(s){return s.id===sh.staffId;});
+  var inner=[];
+  if(showName)inner.push(e("div",{style:{fontWeight:"500",fontSize:"13px"}},[mem?mem.name:"?"]));
+  inner.push(e("div",{style:{fontSize:"12px",color:col.text}},[col.label+" - "+sh.shiftLabel+" - "+sh.shiftTime]));
+  inner.push(e("div",{style:{fontSize:"11px",color:"#888"}},[sh.station+(sh.note?" - "+sh.note:"")+(sh.recurring?" *":"")]));
+  if(ev&&ev.clockIn){inner.push(e("div",{style:{fontSize:"11px",color:"#888",marginTop:"4px"}},["In: "+fmt(ev.clockIn)+(ev.clockOut?" | Out: "+fmt(ev.clockOut)+" | "+calcH(ev.clockIn,ev.clockOut).toFixed(2)+"h":"")]));}
+  var badges=[];
+  if(ev&&ev.approved)badges.push(tag("#0f6e56","Approved"));
+  else if(ev&&ev.clockOut)badges.push(tag("#378add","Pending"));
+  else if(ev&&ev.clockIn)badges.push(tag("#ba7517","Clocked in"));
+  if(showActions){
+    if(!ev&&onClockIn)badges.push(btn("Clock In",true,onClockIn,{fontSize:"11px",padding:"4px 10px"}));
+    if(ev&&ev.clockIn&&!ev.clockOut&&onClockOut)badges.push(btn("Clock Out",false,onClockOut,{fontSize:"11px",padding:"4px 10px"}));
+    if(onRealloc)badges.push(btn("Reallocate",false,onRealloc,{fontSize:"11px",padding:"4px 8px"}));
+    if(onRemove)badges.push(btn("Remove",false,onRemove,{fontSize:"11px",padding:"4px 8px",color:"#c0392b"}));
+  }
+  var row=div({display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"8px"},[div({},inner),div({display:"flex",gap:"5px",flexWrap:"wrap",justifyContent:"flex-end",alignItems:"center"},badges)]);
+  var d=cardEl([row],{borderLeft:"4px solid "+col.border});
+  return d;
+}
+
+function modalEl(title,children,onClose){
+  var box=div({background:B,borderRadius:"14px",padding:"20px 24px",width:"360px",position:"relative",maxHeight:"85vh",overflowY:"auto"},children);
+  var xbtn=e("button",{onclick:onClose,style:{position:"absolute",top:"12px",right:"16px",background:"none",border:"none",fontSize:"20px",cursor:"pointer",color:"rgba(255,255,255,0.7)"}},["\u00d7"]);
+  var heading=e("div",{style:{fontWeight:"600",fontSize:"15px",color:"#fff",marginBottom:"16px"}},[title]);
+  box.insertBefore(heading,box.firstChild);
+  box.insertBefore(xbtn,box.firstChild);
+  var bg=div({position:"fixed",inset:"0",background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:"200"},[box]);
+  return bg;
+}
+
+function tabs(options,active,onChange){
+  return div({display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"16px"},options.map(function(o){
+    var id=typeof o==="object"?o.id:o;
+    var lb=typeof o==="object"?o.label:o.charAt(0).toUpperCase()+o.slice(1);
+    var b=e("button",{className:"btn"+(id===active?" btn-primary":""),onclick:function(){onChange(id);}},typeof lb==="string"?[lb]:[lb]);
+    return b;
+  }));
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function render(){
+  var app=document.getElementById("app");
+  app.innerHTML="";
+  if(!state.ready){
+    app.appendChild(div({textAlign:"center",padding:"60px 0",color:"#888"},["Connecting to database..."]));
+    return;
+  }
+  if(!state.user){renderLogin(app);return;}
+  if(state.user.role==="receptionist"){renderRec(app);return;}
+  if(state.user.role==="admin"){renderAdmin(app);return;}
+  if(state.user.role==="vet"||state.user.role==="nurse"){renderVet(app);return;}
+}
+
+// ── LOGIN ────────────────────────────────────────────────────────
+function renderLogin(app){
+  var loginCard=div({width:"360px",background:"#fff",borderRadius:"16px",padding:"28px",boxShadow:"0 4px 24px rgba(30,58,110,0.12)"},[
+    div({background:B,borderRadius:"10px",padding:"24px 20px",textAlign:"center",marginBottom:"24px"},[
+      div({display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.15)",borderRadius:"12px",width:"56px",height:"56px",marginBottom:"12px"},[
+        e("span",{style:{color:"#fff",fontWeight:"800",fontSize:"20px"}},["FVH"])
+      ]),
+      e("div",{style:{color:"#fff",fontWeight:"700",fontSize:"18px"}},["Fourways Vet Hospital"]),
+      e("div",{style:{color:"rgba(255,255,255,0.7)",fontSize:"11px",marginTop:"3px"}},["& Specialist Referral Centre"]),
+      div({marginTop:"10px"},[e("span",{style:{background:"rgba(255,255,255,0.2)",color:"#fff",borderRadius:"20px",padding:"3px 14px",fontSize:"11px"}},["Reception Shift Manager"])])
+    ]),
+    e("div",{style:{fontWeight:"600",fontSize:"16px",marginBottom:"2px"}},["Welcome back"]),
+    e("div",{style:{fontSize:"12px",color:"#888",marginBottom:"16px"}},["Sign in to view your shifts"]),
+    e("label",{style:{fontSize:"12px",color:"#555",display:"block",marginBottom:"4px"}},["Name"]),
+    inp(state.loginName,function(v){state.loginName=v;},"text","Your name or admin"),
+    e("br",{},[]),
+    e("label",{style:{fontSize:"12px",color:"#555",display:"block",marginTop:"10px",marginBottom:"4px"}},["PIN"]),
+    inp(state.loginPin,function(v){state.loginPin=v;},"password","Enter your PIN"),
+    state.loginErr?e("div",{style:{color:"#c0392b",fontSize:"12px",margin:"8px 0"}},[state.loginErr]):null,
+    btn("Sign In",true,login,{width:"100%",padding:"11px",fontSize:"14px",marginTop:"14px"}),
+    e("div",{style:{marginTop:"16px",fontSize:"11px",color:"#999",textAlign:"center",lineHeight:"1.8"}},["Admin: admin / admin123 | Vet: Vet Login / 0001"])
+  ].filter(Boolean));
+  app.appendChild(div({minHeight:"500px",display:"flex",alignItems:"center",justifyContent:"center"},[loginCard]));
+}
+
+// ── HEADER ────────────────────────────────────────────────────────
+function hdr(){
+  return div({display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:"16px"},[
+    div({display:"flex",alignItems:"center",gap:"10px"},[
+      div({background:B,borderRadius:"8px",width:"38px",height:"38px",display:"flex",alignItems:"center",justifyContent:"center"},[e("span",{style:{color:"#fff",fontWeight:"700",fontSize:"13px"}},["FVH"])]),
+      div({},[
+        e("div",{style:{fontWeight:"500",fontSize:"14px"}},["Fourways Vet Hospital"]),
+        e("div",{style:{fontSize:"11px",color:"#888"}},["Signed in as ",e("strong",{},[state.user.name])," - ",tag(B,state.user.role)])
+      ])
+    ]),
+    btn("Sign out",false,logout)
+  ]);
+}
+
+// ── RECEPTIONIST ────────────────────────────────────────────────
+function renderRec(app){
+  var uid=state.user.id;
+  var ms=state.shifts.filter(function(s){return s.staffId===uid;});
+  var td=new Date();
+  var thisMon=ms.filter(function(s){return s.month===td.getMonth()&&s.year===td.getFullYear();});
+  var totH=0;thisMon.forEach(function(sh){var ev=state.clocks.find(function(c){return c.shiftId===sh.id&&c.clockOut;});if(ev)totH+=calcH(ev.clockIn,ev.clockOut);});
+  var next=ms.filter(function(s){return new Date(s.year,s.month,s.day)>=new Date(td.getFullYear(),td.getMonth(),td.getDate());}).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);})[0];
+  var nextEv=next?state.clocks.find(function(c){return c.shiftId===next.id;}):null;
+
+  app.appendChild(hdr());
+  app.appendChild(tabs([{id:"overview",label:"Overview"},{id:"week",label:"This Week"},{id:"month",label:"Month"},{id:"hours",label:"Hours"},{id:"rules",label:"Rules"}],state.recTab,function(t){set("recTab",t);}));
+
+  var content=div({});
+
+  if(state.recTab==="overview"){
+    // Banner
+    var bannerInner=[
+      e("div",{style:{fontSize:"13px",opacity:"0.8",marginBottom:"4px"}},[td.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})]),
+      e("div",{style:{fontSize:"20px",fontWeight:"600",marginBottom:"12px"}},["Good "+(td.getHours()<12?"morning":td.getHours()<17?"afternoon":"evening")+", "+state.user.name.split(" ")[0]])
+    ];
+    if(next){
+      var nextBox=div({background:"rgba(255,255,255,0.15)",borderRadius:"10px",padding:"10px 14px"},[
+        e("div",{style:{fontSize:"11px",opacity:"0.75",marginBottom:"4px"}},["Your next shift"]),
+        e("div",{style:{fontWeight:"600",fontSize:"14px"}},[new Date(next.year,next.month,next.day).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short"})]),
+        e("div",{style:{fontSize:"12px",opacity:"0.85"}},[next.shiftLabel+" - "+next.shiftTime+" - "+next.station])
+      ]);
+      if(!nextEv)nextBox.appendChild(btn("Clock In Now",true,function(){clockIn(next.id);},{marginTop:"8px",fontSize:"12px",padding:"5px 14px"}));
+      else if(nextEv&&!nextEv.clockOut)nextBox.appendChild(btn("Clock Out",false,function(){clockOut(next.id);},{marginTop:"8px",fontSize:"12px",padding:"5px 14px",background:"rgba(255,255,255,0.25)",color:"#fff",border:"1px solid rgba(255,255,255,0.4)"}));
+      bannerInner.push(nextBox);
+    }else{bannerInner.push(div({background:"rgba(255,255,255,0.15)",borderRadius:"10px",padding:"10px 14px",fontSize:"13px",opacity:"0.85"},["No upcoming shifts"]));}
+    content.appendChild(div({background:"linear-gradient(135deg,#1e3a6e 0%,#2d5299 100%)",borderRadius:"14px",padding:"18px 20px",marginBottom:"16px",color:"#fff"},bannerInner));
+
+    // Stats
+    content.appendChild(div({display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"16px"},[
+      ["Shifts",thisMon.length],["Hours",totH.toFixed(1)],["Pending",state.clocks.filter(function(c){var sh=ms.find(function(s){return s.id===c.shiftId;});return sh&&c.clockOut&&!c.approved;}).length]
+    ].map(function(x){return div({background:"#f0f3fa",borderRadius:"10px",padding:"12px 14px",textAlign:"center"},[e("div",{style:{fontSize:"22px",fontWeight:"600",color:B}},[x[1]+""])  ,e("div",{style:{fontSize:"10px",color:"#888",marginTop:"2px"}},[x[0]])]);})));
+
+    // Upcoming
+    content.appendChild(e("div",{style:{fontWeight:"500",marginBottom:"8px",fontSize:"13px",color:"#888"}},["UPCOMING SHIFTS"]));
+    var upcoming=ms.filter(function(s){return new Date(s.year,s.month,s.day)>=new Date(td.getFullYear(),td.getMonth(),td.getDate());}).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);}).slice(0,5);
+    if(upcoming.length===0)content.appendChild(e("div",{style:{color:"#888",fontSize:"13px"}},["No upcoming shifts"]));
+    upcoming.forEach(function(sh){content.appendChild(shiftCard(sh,false,true,function(){clockIn(sh.id);},function(){clockOut(sh.id);},null,null));});
   }
 
-  function Hdr(){
-    return (
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{background:B,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#fff",fontWeight:700,fontSize:13}}>FVH</span>
-          </div>
-          <div>
-            <div style={{fontWeight:500,fontSize:14}}>Fourways Vet Hospital</div>
-            <div style={{fontSize:11,color:"#888"}}>Signed in as <strong>{user.name}</strong> - <span style={{...tag("#1e3a6e"),fontSize:10}}>{user.role}</span></div>
-          </div>
-        </div>
-        <button style={btn(false)} onClick={logout}>Sign out</button>
-      </div>
-    );
-  }
-
-  if (!ready) {
-    return (
-      <div style={{minHeight:400,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-        <div style={{background:B,borderRadius:12,width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <span style={{color:"#fff",fontWeight:800,fontSize:16}}>FVH</span>
-        </div>
-        <div style={{fontSize:14,color:"#888"}}>Connecting to database...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div style={{minHeight:500,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div style={{width:360,background:"#fff",borderRadius:16,padding:28,boxShadow:"0 4px 24px rgba(30,58,110,0.12)"}}>
-          <div style={{background:B,borderRadius:10,padding:"24px 20px",textAlign:"center",marginBottom:24}}>
-            <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.15)",borderRadius:12,width:56,height:56,marginBottom:12}}>
-              <span style={{color:"#fff",fontWeight:800,fontSize:20}}>FVH</span>
-            </div>
-            <div style={{color:"#fff",fontWeight:700,fontSize:18}}>Fourways Vet Hospital</div>
-            <div style={{color:"rgba(255,255,255,0.7)",fontSize:11,marginTop:3}}>&amp; Specialist Referral Centre</div>
-            <div style={{marginTop:10}}><span style={{background:"rgba(255,255,255,0.2)",color:"#fff",borderRadius:20,padding:"3px 14px",fontSize:11}}>Reception Shift Manager</span></div>
-          </div>
-          <div style={{fontWeight:600,fontSize:16,marginBottom:2}}>Welcome back</div>
-          <div style={{fontSize:12,color:"#888",marginBottom:16}}>Sign in to view your shifts</div>
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,color:"#555",display:"block",marginBottom:4}}>Name</label>
-            <input style={li} placeholder="Your name or admin" value={loginName} onChange={function(e){setLoginName(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")login();}} />
-          </div>
-          <div style={{marginBottom:14}}>
-            <label style={{fontSize:12,color:"#555",display:"block",marginBottom:4}}>PIN</label>
-            <input type="password" style={li} placeholder="Enter your PIN" value={loginPin} onChange={function(e){setLoginPin(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")login();}} />
-          </div>
-          {loginErr && <div style={{color:"#c0392b",fontSize:12,marginBottom:10}}>{loginErr}</div>}
-          <button style={{...btn(true),width:"100%",padding:11,fontSize:14}} onClick={login}>Sign In</button>
-          <div style={{marginTop:16,fontSize:11,color:"#999",textAlign:"center",lineHeight:1.8}}>
-            Admin: <strong>admin</strong> / <strong>admin123</strong><br/>
-            Vet: <strong>Vet Login</strong> / <strong>0001</strong><br/>
-            Nurse: <strong>Nurse Login</strong> / <strong>0002</strong>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── RECEPTIONIST ──────────────────────────────────────────────
-  if (user.role === "receptionist") {
-    const uid = user.id;
-    const ms = myShifts(uid);
-    const thisMon = ms.filter(function(s){return s.month===today.getMonth()&&s.year===today.getFullYear();});
-    let totH = 0;
-    thisMon.forEach(function(sh){const ev=clocks.find(function(c){return c.shiftId===sh.id&&c.clockOut;});if(ev)totH+=calcH(ev.clockIn,ev.clockOut);});
-    const next = ms.filter(function(s){return new Date(s.year,s.month,s.day)>=new Date(today.getFullYear(),today.getMonth(),today.getDate());}).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);})[0];
-    const nextEv = next?clocks.find(function(c){return c.shiftId===next.id;}):null;
-
-    const dim = daysInMonth(vy,vm);
-    const fd = firstDay(vy,vm);
-    const cells = [];
-    for(let i=0;i<fd;i++)cells.push(null);
-    for(let d=1;d<=dim;d++)cells.push(d);
-
-    const wkStart = new Date(today.getFullYear(),today.getMonth(),today.getDate()+wkOff*7);
+  if(state.recTab==="week"){
+    var wkStart=new Date(td.getFullYear(),td.getMonth(),td.getDate()+state.wkOff*7);
     wkStart.setDate(wkStart.getDate()-wkStart.getDay());
-    const wkDays = [];
-    for(let i=0;i<7;i++){const d=new Date(wkStart);d.setDate(d.getDate()+i);wkDays.push(d);}
-
-    return (
-      <div>
-        <Hdr/>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:16}}>
-          {[["overview","Overview"],["week","This Week"],["month","Month"],["hours","Hours"],["rules","Rules"]].map(function([id,lb]){
-            return <button key={id} style={{...btn(recTab===id),fontSize:12}} onClick={function(){setRecTab(id);}}>{lb}</button>;
-          })}
-        </div>
-
-        {recTab==="overview" && (
-          <div>
-            <div style={{background:"linear-gradient(135deg,#1e3a6e 0%,#2d5299 100%)",borderRadius:14,padding:"18px 20px",marginBottom:16,color:"#fff"}}>
-              <div style={{fontSize:13,opacity:0.8,marginBottom:4}}>{today.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
-              <div style={{fontSize:20,fontWeight:600,marginBottom:12}}>Good {today.getHours()<12?"morning":today.getHours()<17?"afternoon":"evening"}, {user.name.split(" ")[0]}</div>
-              {next?(
-                <div style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"10px 14px"}}>
-                  <div style={{fontSize:11,opacity:0.75,marginBottom:4}}>Your next shift</div>
-                  <div style={{fontWeight:600,fontSize:14}}>{new Date(next.year,next.month,next.day).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short"})}</div>
-                  <div style={{fontSize:12,opacity:0.85}}>{next.shiftLabel} - {next.shiftTime} - {next.station}</div>
-                  {!nextEv&&<button style={{marginTop:8,background:"#fff",color:B,border:"none",borderRadius:7,padding:"5px 14px",fontSize:12,fontWeight:600,cursor:"pointer"}} onClick={function(){clockIn(next.id);}}>Clock In Now</button>}
-                  {nextEv&&!nextEv.clockOut&&<button style={{marginTop:8,background:"rgba(255,255,255,0.25)",color:"#fff",border:"1px solid rgba(255,255,255,0.4)",borderRadius:7,padding:"5px 14px",fontSize:12,cursor:"pointer"}} onClick={function(){clockOut(next.id);}}>Clock Out</button>}
-                  {nextEv&&nextEv.approved&&<span style={{marginTop:8,display:"inline-block",background:"rgba(16,185,129,0.3)",color:"#6ee7b7",borderRadius:6,padding:"3px 10px",fontSize:11}}>Approved</span>}
-                </div>
-              ):<div style={{background:"rgba(255,255,255,0.15)",borderRadius:10,padding:"10px 14px",fontSize:13,opacity:0.85}}>No upcoming shifts</div>}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
-              {[["Shifts",thisMon.length],["Hours",totH.toFixed(1)],["Pending",clocks.filter(function(c){const sh=ms.find(function(s){return s.id===c.shiftId;});return sh&&c.clockOut&&!c.approved;}).length]].map(function([l,v]){
-                return <div key={l} style={{background:"#f0f3fa",borderRadius:10,padding:"12px 14px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:600,color:B}}>{v}</div><div style={{fontSize:10,color:"#888",marginTop:2}}>{l}</div></div>;
-              })}
-            </div>
-            <div style={{fontWeight:500,marginBottom:8,fontSize:13,color:"#888"}}>UPCOMING SHIFTS</div>
-            {ms.filter(function(s){return new Date(s.year,s.month,s.day)>=new Date(today.getFullYear(),today.getMonth(),today.getDate());}).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);}).slice(0,5).map(function(sh){
-              const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);
-              const ev=clocks.find(function(c){return c.shiftId===sh.id;});
-              return (
-                <div key={sh.id} style={{...card,borderLeft:"4px solid "+col.border}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div>
-                      <div style={{fontWeight:500,fontSize:13}}>{new Date(sh.year,sh.month,sh.day).toLocaleDateString("en-ZA",{weekday:"short",day:"numeric",month:"short"})}</div>
-                      <div style={{fontSize:12,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div>
-                      <div style={{fontSize:11,color:"#888"}}>{sh.station}</div>
-                    </div>
-                    <div>
-                      {ev&&ev.approved&&<span style={tag("#0f6e56")}>Approved</span>}
-                      {ev&&ev.clockOut&&!ev.approved&&<span style={tag("#378add")}>Awaiting</span>}
-                      {ev&&ev.clockIn&&!ev.clockOut&&<button style={{...btn(false),fontSize:11}} onClick={function(){clockOut(sh.id);}}>Clock Out</button>}
-                      {!ev&&<button style={{...btn(true),fontSize:11}} onClick={function(){clockIn(sh.id);}}>Clock In</button>}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {recTab==="week" && (
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-              <button style={btn(false)} onClick={function(){setWkOff(function(o){return o-1;});}}>prev</button>
-              <span style={{fontWeight:500,flex:1,textAlign:"center",fontSize:13}}>{wkDays[0].toLocaleDateString("en-ZA",{day:"numeric",month:"short"})} - {wkDays[6].toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"})}</span>
-              <button style={btn(false)} onClick={function(){setWkOff(function(o){return o+1;});}}>next</button>
-              {wkOff!==0&&<button style={{...btn(false),fontSize:11}} onClick={function(){setWkOff(0);}}>Today</button>}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4}}>
-              {wkDays.map(function(d,i){
-                const isT=d.toDateString()===today.toDateString();
-                const isW=d.getDay()===0||d.getDay()===6;
-                const ds=shifts.filter(function(s){return s.staffId===uid&&s.day===d.getDate()&&s.month===d.getMonth()&&s.year===d.getFullYear();});
-                return (
-                  <div key={i} style={{borderRadius:10,border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:isW?"#faf7ff":"#fff",padding:"6px 4px",minHeight:90}}>
-                    <div style={{textAlign:"center",marginBottom:4}}>
-                      <div style={{fontSize:9,color:"#888",fontWeight:500}}>{DAYS[d.getDay()]}</div>
-                      <div style={{fontSize:15,fontWeight:isT?700:400,color:isT?"#fff":isW?"#7C3AED":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",margin:"2px auto 0"}}>{d.getDate()}</div>
-                    </div>
-                    {ds.length===0&&<div style={{fontSize:9,color:"#ccc",textAlign:"center",marginTop:6}}>-</div>}
-                    {ds.map(function(sh){
-                      const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);
-                      return <div key={sh.id} style={{background:col.bg,color:col.text,borderLeft:"3px solid "+col.border,borderRadius:4,padding:"2px 4px",fontSize:9,fontWeight:500,marginBottom:2}}>{col.label[0]} {sh.shiftLabel.split(" ")[0]}</div>;
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {recTab==="month" && (
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-              <button style={btn(false)} onClick={function(){if(vm===0){setVm(11);setVy(function(y){return y-1;});}else setVm(function(m){return m-1;});}}>prev</button>
-              <span style={{fontWeight:600,flex:1,textAlign:"center",fontSize:15}}>{MONTHS[vm]} {vy}</span>
-              <button style={btn(false)} onClick={function(){if(vm===11){setVm(0);setVy(function(y){return y+1;});}else setVm(function(m){return m+1;});}}>next</button>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
-              {DAYS.map(function(d){return <div key={d} style={{textAlign:"center",fontSize:10,color:"#888",fontWeight:600,padding:"4px 0"}}>{d}</div>;})}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
-              {cells.map(function(day,i){
-                if(!day)return <div key={i}/>;
-                const isT=day===today.getDate()&&vm===today.getMonth()&&vy===today.getFullYear();
-                const ds=shifts.filter(function(s){return s.staffId===uid&&s.day===day&&s.month===vm&&s.year===vy;});
-                return (
-                  <div key={i} onClick={function(){if(ds.length)setSelDay(selDay===day?null:day);}} style={{minHeight:60,borderRadius:8,border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:ds.length?"#fff":"#f8f9fc",padding:4,cursor:ds.length?"pointer":"default"}}>
-                    <div style={{fontSize:11,fontWeight:isT?700:400,color:isT?"#fff":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:2}}>{day}</div>
-                    {ds.slice(0,2).map(function(sh){const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{background:col.bg,color:col.text,borderRadius:3,padding:"1px 3px",fontSize:9,marginBottom:1}}>{col.label[0]}</div>;})}
-                  </div>
-                );
-              })}
-            </div>
-            {selDay&&(function(){
-              const ds=shifts.filter(function(s){return s.staffId===uid&&s.day===selDay&&s.month===vm&&s.year===vy;});
-              if(!ds.length)return null;
-              return (
-                <div style={{marginTop:16}}>
-                  <div style={{fontWeight:500,marginBottom:8,color:B}}>{new Date(vy,vm,selDay).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
-                  {ds.map(function(sh){
-                    const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);
-                    const ev=clocks.find(function(c){return c.shiftId===sh.id;});
-                    return (
-                      <div key={sh.id} style={{...card,borderLeft:"4px solid "+col.border}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <div><div style={{fontWeight:500,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{fontSize:12,color:"#888"}}>{sh.station}</div></div>
-                          <div>
-                            {ev&&ev.approved&&<span style={tag("#0f6e56")}>Approved</span>}
-                            {ev&&ev.clockOut&&!ev.approved&&<span style={tag("#378add")}>Pending</span>}
-                            {ev&&ev.clockIn&&!ev.clockOut&&<button style={{...btn(false),fontSize:12}} onClick={function(){clockOut(sh.id);}}>Clock Out</button>}
-                            {!ev&&<button style={{...btn(true),fontSize:12}} onClick={function(){clockIn(sh.id);}}>Clock In</button>}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-          </div>
-        )}
-
-        {recTab==="hours" && (
-          <div>
-            <div style={{fontWeight:500,marginBottom:12}}>Hours this month</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-              <div style={{background:"#f0f3fa",borderRadius:8,padding:"12px 14px"}}><div style={{fontSize:11,color:"#888"}}>Shifts</div><div style={{fontSize:26,fontWeight:500,color:B}}>{thisMon.length}</div></div>
-              <div style={{background:"#f0f3fa",borderRadius:8,padding:"12px 14px"}}><div style={{fontSize:11,color:"#888"}}>Hours worked</div><div style={{fontSize:26,fontWeight:500,color:B}}>{totH.toFixed(2)}</div></div>
-            </div>
-            <div style={card}>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                <thead><tr style={{borderBottom:"0.5px solid #dde3ee"}}>{["Date","Shift","In","Out","Hours","Status"].map(function(h){return <th key={h} style={{textAlign:"left",padding:"6px 8px",fontSize:11,color:"#888",fontWeight:500}}>{h}</th>;})}</tr></thead>
-                <tbody>{thisMon.map(function(sh){const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <tr key={sh.id} style={{borderBottom:"0.5px solid #eee"}}><td style={{padding:"7px 8px"}}>{new Date(sh.year,sh.month,sh.day).toLocaleDateString("en-ZA",{day:"numeric",month:"short"})}</td><td style={{padding:"7px 8px",fontSize:12,color:col.text}}>{sh.shiftLabel}</td><td style={{padding:"7px 8px",fontSize:11}}>{ev&&ev.clockIn?fmt(ev.clockIn):"-"}</td><td style={{padding:"7px 8px",fontSize:11}}>{ev&&ev.clockOut?fmt(ev.clockOut):"-"}</td><td style={{padding:"7px 8px"}}>{ev&&ev.clockOut?calcH(ev.clockIn,ev.clockOut).toFixed(2):"-"}</td><td style={{padding:"7px 8px"}}>{ev&&ev.approved?<span style={tag("#0f6e56")}>Approved</span>:ev&&ev.clockOut?<span style={tag("#378add")}>Pending</span>:<span style={{color:"#aaa",fontSize:11}}>-</span>}</td></tr>;})}</tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {recTab==="rules" && (
-          <div>
-            <div style={{fontWeight:500,marginBottom:12}}>Rules and Protocols</div>
-            {rules.map(function(r){return <div key={r.id} style={{...card,borderLeft:"4px solid "+B}}><div style={{fontWeight:500,marginBottom:6,color:B}}>{r.title}</div><div style={{fontSize:13,whiteSpace:"pre-wrap",lineHeight:1.6}}>{r.content}</div></div>;})}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ── ADMIN ─────────────────────────────────────────────────────
-  if (user.role === "admin") {
-    const pd = payroll(payM, payY);
-    const pmn = new Date(payY,payM,1).toLocaleString("en-ZA",{month:"long",year:"numeric"});
-    const tds = dayShifts(today.getDate(),today.getMonth(),today.getFullYear());
-    const pend = clocks.filter(function(c){return c.clockOut&&!c.approved;}).length;
-
-    const sorted = shifts.slice().sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);});
-    const grouped = {};
-    sorted.forEach(function(sh){const k=sh.year+"-"+sh.month+"-"+sh.day;if(!grouped[k])grouped[k]={year:sh.year,month:sh.month,day:sh.day,shifts:[]};grouped[k].shifts.push(sh);});
-    standbys.forEach(function(sb){const k=sb.year+"-"+sb.month+"-"+sb.day;if(!grouped[k])grouped[k]={year:sb.year,month:sb.month,day:sb.day,shifts:[]};});
-
-    const dim=daysInMonth(vy,vm);const fd2=firstDay(vy,vm);
-    const cal=[];for(let i=0;i<fd2;i++)cal.push(null);for(let d=1;d<=dim;d++)cal.push(d);
-
-    return (
-      <div>
-        <Hdr/>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
-          {["dashboard","calendar","shifts","payroll","staff","rules"].map(function(t){return <button key={t} style={btn(adminTab===t)} onClick={function(){setAdminTab(t);}}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>;})}
-        </div>
-
-        {adminTab==="dashboard" && (
-          <div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:16}}>
-              {[["Staff",recs.length],["Today",tds.length],["Approvals",pend],["Month",shifts.filter(function(s){return s.month===today.getMonth()&&s.year===today.getFullYear();}).length]].map(function([l,v]){
-                return <div key={l} style={{background:"#f0f3fa",borderRadius:8,padding:"12px 14px"}}><div style={{fontSize:26,fontWeight:500,color:B}}>{v}</div><div style={{fontSize:11,color:"#888"}}>{l}</div></div>;
-              })}
-            </div>
-            <div style={card}>
-              <div style={{fontWeight:500,marginBottom:10}}>Today - {today.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
-              {tds.length===0&&<div style={{color:"#888",fontSize:13}}>No shifts today</div>}
-              {tds.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"0.5px solid #eee",fontSize:13}}><span style={{fontWeight:500}}>{m&&m.name}</span><span style={{color:col.text,fontSize:12}}>{col.label} - {sh.shiftTime}</span><span>{ev&&ev.approved?<span style={tag("#0f6e56")}>Approved</span>:ev&&ev.clockOut?<span style={tag("#378add")}>Out</span>:ev&&ev.clockIn?<span style={tag("#ba7517")}>In</span>:<span style={{color:"#aaa"}}>-</span>}</span></div>;})}
-            </div>
-          </div>
-        )}
-
-        {adminTab==="calendar" && (
-          <div>
-            <div style={card}>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                <button style={btn(false)} onClick={function(){if(vm===0){setVm(11);setVy(function(y){return y-1;});}else setVm(function(m){return m-1;});}}>prev</button>
-                <span style={{fontWeight:500,flex:1,textAlign:"center"}}>{MONTHS[vm]} {vy}</span>
-                <button style={btn(false)} onClick={function(){if(vm===11){setVm(0);setVy(function(y){return y+1;});}else setVm(function(m){return m+1;});}}>next</button>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
-                {DAYS.map(function(d){return <div key={d} style={{textAlign:"center",fontSize:11,color:"#888",padding:"4px 0",fontWeight:500}}>{d}</div>;})}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4}}>
-                {cal.map(function(day,i){
-                  if(!day)return <div key={i}/>;
-                  const ds=dayShifts(day,vm,vy);
-                  const isT=day===today.getDate()&&vm===today.getMonth()&&vy===today.getFullYear();
-                  return (
-                    <div key={i} onClick={function(){setSelDay(day);}} style={{minHeight:80,borderRadius:10,border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:selDay===day?"#e8eef7":"#fff",padding:"6px 8px",cursor:"pointer"}}>
-                      <div style={{fontSize:12,fontWeight:isT?700:400,color:isT?"#fff":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:4}}>{day}</div>
-                      {ds.slice(0,2).map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{fontSize:9,background:col.bg,color:col.text,borderRadius:3,padding:"2px 4px",marginTop:2,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{m&&m.name}</div>;})}
-                      {ds.length>2&&<div style={{fontSize:9,color:"#aaa",marginTop:2}}>+{ds.length-2}</div>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div style={card}>
-              {!selDay&&<div style={{color:"#888",fontSize:13,textAlign:"center",padding:"12px 0"}}>Select a day to view shifts</div>}
-              {selDay&&(function(){
-                const ds=dayShifts(selDay,vm,vy);
-                const sbs=daySBs(selDay,vm,vy);
-                return (
-                  <div>
-                    <div style={{fontWeight:500,marginBottom:10,color:B}}>{new Date(vy,vm,selDay).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
-                    {ds.length===0&&sbs.length===0&&<div style={{fontSize:13,color:"#888"}}>No shifts allocated</div>}
-                    {ds.map(function(sh){const mem=staff.find(function(s){return s.id===sh.staffId;});const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{...card,borderLeft:"4px solid "+col.border,marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}><div><div style={{fontWeight:500}}>{mem&&mem.name}</div><div style={{fontSize:12,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div><div style={{fontSize:11,color:"#888"}}>{sh.station}{sh.recurring?" (recurring)":""}</div></div><div style={{display:"flex",gap:5}}>{ev&&ev.approved&&<span style={tag("#0f6e56")}>Approved</span>}{ev&&ev.clockOut&&!ev.approved&&<span style={tag("#378add")}>Out</span>}{ev&&ev.clockIn&&!ev.clockOut&&<span style={tag("#ba7517")}>In</span>}<button style={{...btn(false),fontSize:11,padding:"3px 7px"}} onClick={function(){setReallocMod(sh);setReallocTo("");}}>Reallocate</button><button style={{...btn(false),fontSize:11,padding:"3px 7px",color:"#c0392b"}} onClick={function(){delShift(sh.id);}}>Remove</button></div></div></div>;})}
-                    {sbs.map(function(sb){const mem=staff.find(function(s){return s.id===sb.staffId;});return <div key={sb.id} style={{background:SBC.bg,border:"1px solid "+SBC.border,borderRadius:10,padding:"10px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:500,color:SBC.text}}>Standby - {mem&&mem.name}</div>{sb.note&&<div style={{fontSize:11,color:SBC.text}}>{sb.note}</div>}</div><button style={{...btn(false),fontSize:11,color:"#c0392b"}} onClick={function(){delSB(sb.id);}}>Remove</button></div>;})}
-                    <div style={{display:"flex",gap:8,marginTop:10}}>
-                      <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setShiftMod({day:selDay,month:vm,year:vy});}}>+ Add Shift</button>
-                      <button style={{background:SBC.bg,color:SBC.text,border:"1px solid "+SBC.border,borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13}} onClick={function(){setSbMod({day:selDay,month:vm,year:vy});}}>+ Add Standby</button>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-        )}
-
-        {adminTab==="shifts" && (
-          <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{display:"flex",gap:6}}>
-                {[["roster","Roster"],["reallocate","Reallocate"]].map(function([id,lb]){return <button key={id} style={{...btn(subTab===id),fontSize:12}} onClick={function(){setSubTab(id);}}>{lb}</button>;})}
-              </div>
-              <div style={{display:"flex",gap:6}}>
-                <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setShiftMod({day:today.getDate(),month:today.getMonth(),year:today.getFullYear()});}}>+ Shift</button>
-                <button style={{background:SBC.bg,color:SBC.text,border:"1px solid "+SBC.border,borderRadius:8,padding:"7px 12px",cursor:"pointer",fontSize:13}} onClick={function(){setSbMod({day:today.getDate(),month:today.getMonth(),year:today.getFullYear()});}}>+ Standby</button>
-              </div>
-            </div>
-            {Object.keys(grouped).length===0&&<div style={{color:"#888",fontSize:13}}>No shifts yet.</div>}
-            {Object.values(grouped).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);}).map(function(g){
-              const k=g.year+"-"+g.month+"-"+g.day;
-              const dl=new Date(g.year,g.month,g.day).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-              const isT=g.day===today.getDate()&&g.month===today.getMonth()&&g.year===today.getFullYear();
-              const sbs=daySBs(g.day,g.month,g.year);
-              return (
-                <div key={k} style={{marginBottom:20}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                    <div style={{fontWeight:600,fontSize:13,color:isT?B:"#1a1a2e"}}>{dl}</div>
-                    {isT&&<span style={{...tag(B),fontSize:10}}>Today</span>}
-                    <div style={{flex:1,height:"0.5px",background:"#dde3ee"}}/>
-                    <span style={{fontSize:11,color:"#888"}}>{g.shifts.length} shift{g.shifts.length!==1?"s":""}{sbs.length>0?" + "+sbs.length+" SB":""}</span>
-                  </div>
-                  {subTab==="roster"&&(
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:8}}>
-                      {g.shifts.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);const ev=clocks.find(function(c){return c.shiftId===sh.id;});return <div key={sh.id} style={{background:col.bg,borderRadius:10,padding:"10px 12px",borderLeft:"4px solid "+col.border}}><div style={{fontWeight:600,fontSize:13,color:col.text}}>{m&&m.name}</div><div style={{fontSize:11,color:col.text,opacity:0.85,marginTop:2}}>{col.label} - {sh.shiftLabel}</div><div style={{fontSize:11,color:col.text,opacity:0.75}}>{sh.shiftTime}</div><div style={{fontSize:10,color:col.text,opacity:0.65,marginTop:2}}>{sh.station}{sh.recurring?" *":""}</div>{ev&&<div style={{marginTop:4}}>{ev.approved&&<span style={{fontSize:10,background:"rgba(16,185,129,0.2)",color:"#065F46",borderRadius:4,padding:"2px 6px"}}>Approved</span>}{ev.clockOut&&!ev.approved&&<span style={{fontSize:10,background:"rgba(55,138,221,0.2)",color:"#185FA5",borderRadius:4,padding:"2px 6px"}}>Out</span>}{ev.clockIn&&!ev.clockOut&&<span style={{fontSize:10,background:"rgba(186,117,23,0.2)",color:"#92400E",borderRadius:4,padding:"2px 6px"}}>In</span>}</div>}</div>;})}
-                      {sbs.map(function(sb){const m=staff.find(function(s){return s.id===sb.staffId;});return <div key={sb.id} style={{background:SBC.bg,borderRadius:10,padding:"10px 12px",borderLeft:"4px solid "+SBC.border}}><div style={{fontWeight:600,fontSize:13,color:SBC.text}}>{m&&m.name}</div><div style={{fontSize:11,color:SBC.text,opacity:0.85,marginTop:2}}>Standby</div></div>;})}
-                    </div>
-                  )}
-                  {subTab==="reallocate"&&(
-                    <div>
-                      {g.shifts.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{...card,display:"flex",justifyContent:"space-between",alignItems:"center",borderLeft:"4px solid "+col.border,marginBottom:6}}><div><div style={{fontWeight:500}}>{m&&m.name}</div><div style={{fontSize:12,color:col.text}}>{col.label} - {sh.shiftLabel} - {sh.shiftTime}</div></div><div style={{display:"flex",gap:6}}><button style={{...btn(true),fontSize:11,padding:"5px 10px",background:B,color:"#fff",border:"none"}} onClick={function(){setReallocMod(sh);setReallocTo("");}}>Reallocate</button><button style={{...btn(false),fontSize:11,padding:"5px 10px",color:"#c0392b"}} onClick={function(){delShift(sh.id);}}>Remove</button></div></div>;})}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {adminTab==="payroll" && (
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-              <button style={btn(false)} onClick={function(){if(payM===0){setPayM(11);setPayY(function(y){return y-1;});}else setPayM(function(m){return m-1;});}}>prev</button>
-              <span style={{fontWeight:500}}>{pmn}</span>
-              <button style={btn(false)} onClick={function(){if(payM===11){setPayM(0);setPayY(function(y){return y+1;});}else setPayM(function(m){return m+1;});}}>next</button>
-            </div>
-            <div style={card}>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                <thead><tr style={{borderBottom:"0.5px solid #dde3ee"}}>{["Name","Shifts","Hours","Rate","Total Pay"].map(function(h){return <th key={h} style={{textAlign:"left",padding:"6px 8px",fontSize:11,color:"#888",fontWeight:500}}>{h}</th>;})}</tr></thead>
-                <tbody>{pd.map(function(r){return <tr key={r.id} style={{borderBottom:"0.5px solid #eee"}}><td style={{padding:"8px",fontWeight:500}}>{r.name}</td><td style={{padding:"8px"}}>{r.cnt}</td><td style={{padding:"8px"}}>{r.hrs.toFixed(2)}</td><td style={{padding:"8px"}}>R {r.hourlyRate.toFixed(2)}</td><td style={{padding:"8px",fontWeight:500,color:B}}>R {r.pay.toFixed(2)}</td></tr>;})}</tbody>
-                <tfoot><tr style={{borderTop:"1.5px solid "+B}}><td colSpan={2} style={{padding:"8px",fontWeight:500}}>Total</td><td style={{padding:"8px",fontWeight:500}}>{pd.reduce(function(a,r){return a+r.hrs;},0).toFixed(2)}</td><td/><td style={{padding:"8px",fontWeight:500,color:B}}>R {pd.reduce(function(a,r){return a+r.pay;},0).toFixed(2)}</td></tr></tfoot>
-              </table>
-            </div>
-            <button style={{...btn(true),background:B,color:"#fff",border:"none",marginTop:14,padding:"10px 20px"}} onClick={function(){
-              const rows=[["Name","Shifts","Hours","Rate","Total Pay"],...pd.map(function(r){return [r.name,r.cnt,r.hrs.toFixed(2),r.hourlyRate.toFixed(2),r.pay.toFixed(2)];}),["TOTAL","",pd.reduce(function(a,r){return a+r.hrs;},0).toFixed(2),"",pd.reduce(function(a,r){return a+r.pay;},0).toFixed(2)]];
-              const csv=rows.map(function(r){return r.map(function(v){return '"'+v+'"';}).join(",");}).join("\n");
-              const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);
-              const a=document.createElement("a");a.href=url;a.download="FVH_Payroll_"+pmn.replace(" ","_")+".csv";a.click();URL.revokeObjectURL(url);
-            }}>Download CSV</button>
-          </div>
-        )}
-
-        {adminTab==="staff" && (
-          <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontWeight:500}}>Staff profiles</div>
-              <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setAddStaffOpen(true);}}>+ Add Staff</button>
-            </div>
-            {staff.map(function(m){return (
-              <div key={m.id} style={{...card,padding:"12px 16px"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{width:36,height:36,borderRadius:"50%",background:B+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:500,color:B}}>{m.name[0]}</div>
-                    <div><div style={{fontWeight:500,fontSize:14}}>{m.name}</div><span style={{...tag("#1e3a6e"),fontSize:10,padding:"1px 6px"}}>{m.role}</span></div>
-                  </div>
-                  {m.role==="receptionist"&&(
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      {editRateId===m.id?(
-                        <>
-                          <span style={{fontSize:13,color:"#888"}}>R</span>
-                          <input type="number" autoFocus style={{...li,width:80,padding:"5px 8px"}} value={editRateVal} onChange={function(e){setEditRateVal(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter")saveRate(m.id);}}/>
-                          <span style={{fontSize:13,color:"#888"}}>/hr</span>
-                          <button style={{...btn(true),padding:"5px 12px",fontSize:12}} onClick={function(){saveRate(m.id);}}>Save</button>
-                          <button style={{...btn(false),padding:"5px 12px",fontSize:12}} onClick={function(){setEditRateId(null);}}>Cancel</button>
-                        </>
-                      ):(
-                        <>
-                          <span style={{fontSize:14,fontWeight:500,color:B}}>R {m.hourlyRate}/hr</span>
-                          <button style={{...btn(false),padding:"5px 12px",fontSize:12}} onClick={function(){setEditRateId(m.id);setEditRateVal(m.hourlyRate);}}>Edit rate</button>
-                        </>
-                      )}
-                      <button style={{...btn(false),padding:"5px 10px",fontSize:12,color:"#c0392b"}} onClick={function(){if(window.confirm("Remove "+m.name+"?"))delStaff(m.id);}}>Delete</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );})}
-          </div>
-        )}
-
-        {adminTab==="rules" && (
-          <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontWeight:500}}>Rules and Protocols</div>
-              <button style={{...btn(true),background:B,color:"#fff",border:"none"}} onClick={function(){setRuleMod("new");setNewRule({title:"",content:""});}}>+ Add Rule</button>
-            </div>
-            {rules.map(function(r){return (
-              <div key={r.id} style={{...card,borderLeft:"4px solid "+B}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                  <div style={{fontWeight:500}}>{r.title}</div>
-                  <div style={{display:"flex",gap:6}}>
-                    <button style={{...btn(false),fontSize:11,padding:"4px 8px"}} onClick={function(){setRuleMod(r.id);setNewRule({title:r.title,content:r.content});}}>Edit</button>
-                    <button style={{...btn(false),fontSize:11,padding:"4px 8px",color:"#c0392b"}} onClick={function(){delRule(r.id);}}>Delete</button>
-                  </div>
-                </div>
-                <div style={{fontSize:12,color:"#666",whiteSpace:"pre-wrap",lineHeight:1.6}}>{r.content}</div>
-              </div>
-            );})}
-          </div>
-        )}
-
-        {shiftMod&&<Modal onClose={function(){setShiftMod(null);}}>
-          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add shift - {new Date(shiftMod.year,shiftMod.month,shiftMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"})}</div>
-          <div style={{marginBottom:12}}><label style={ml}>Staff member</label><select style={mi} value={newShift.staffId} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{staffId:e.target.value});});}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
-          <div style={{marginBottom:12}}><label style={ml}>Shift type</label><select style={mi} value={newShift.shiftType} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{shiftType:e.target.value});});}}>{SHIFTS.map(function(t){return <option key={t.id} value={t.id}>{t.label} ({t.time})</option>;})}</select></div>
-          <div style={{marginBottom:12}}><label style={ml}>Station</label><select style={mi} value={newShift.station} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{station:e.target.value});});}}>{STATIONS.map(function(s){return <option key={s}>{s}</option>;})}</select></div>
-          <div style={{marginBottom:16}}><label style={ml}>Note</label><input style={mi} value={newShift.note} onChange={function(e){setNewShift(function(p){return Object.assign({},p,{note:e.target.value});});}}/></div>
-          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={addShift}>Add Shift</button><button style={mb(false)} onClick={function(){setShiftMod(null);}}>Cancel</button></div>
-        </Modal>}
-
-        {sbMod&&<Modal onClose={function(){setSbMod(null);}}>
-          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add Standby - {new Date(sbMod.year,sbMod.month,sbMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"})}</div>
-          <div style={{marginBottom:12}}><label style={ml}>Staff member</label><select style={mi} value={newSb.staffId} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{staffId:e.target.value});});}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
-          <div style={{marginBottom:16}}><label style={ml}>Note (optional)</label><input style={mi} value={newSb.note} onChange={function(e){setNewSb(function(p){return Object.assign({},p,{note:e.target.value}});}}/></div>
-          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={addSB}>Confirm</button><button style={mb(false)} onClick={function(){setSbMod(null);}}>Cancel</button></div>
-        </Modal>}
-
-        {reallocMod&&<Modal onClose={function(){setReallocMod(null);}}>
-          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Reallocate - {reallocMod.shiftLabel}</div>
-          <div style={{marginBottom:16}}><label style={ml}>Reassign to</label><select style={mi} value={reallocTo} onChange={function(e){setReallocTo(e.target.value);}}><option value="">Select...</option>{recs.map(function(r){return <option key={r.id} value={r.id}>{r.name}</option>;})}</select></div>
-          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={doRealloc}>Confirm</button><button style={mb(false)} onClick={function(){setReallocMod(null);}}>Cancel</button></div>
-        </Modal>}
-
-        {ruleMod&&<Modal onClose={function(){setRuleMod(null);}}>
-          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>{ruleMod==="new"?"Add rule":"Edit rule"}</div>
-          <div style={{marginBottom:12}}><label style={ml}>Title</label><input style={mi} value={newRule.title} onChange={function(e){setNewRule(function(p){return Object.assign({},p,{title:e.target.value});});}}/></div>
-          <div style={{marginBottom:16}}><label style={ml}>Content</label><textarea style={{...mi,height:120,resize:"vertical"}} value={newRule.content} onChange={function(e){setNewRule(function(p){return Object.assign({},p,{content:e.target.value});});}}/></div>
-          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={saveRule}>Save</button><button style={mb(false)} onClick={function(){setRuleMod(null);}}>Cancel</button></div>
-        </Modal>}
-
-        {addStaffOpen&&<Modal onClose={function(){setAddStaffOpen(false);}}>
-          <div style={{fontWeight:600,marginBottom:16,fontSize:15,color:"#fff"}}>Add new staff member</div>
-          <div style={{marginBottom:12}}><label style={ml}>Name</label><input style={mi} value={newStaff.name} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{name:e.target.value});});}}/></div>
-          <div style={{marginBottom:12}}><label style={ml}>PIN</label><input type="password" style={mi} value={newStaff.pin} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{pin:e.target.value});});}}/></div>
-          <div style={{marginBottom:12}}><label style={ml}>Role</label><select style={mi} value={newStaff.role} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{role:e.target.value});});}}><option value="receptionist">Receptionist</option><option value="vet">Vet</option><option value="nurse">Nurse</option></select></div>
-          {newStaff.role==="receptionist"&&<div style={{marginBottom:12}}><label style={ml}>Hourly Rate (R)</label><input type="number" style={mi} value={newStaff.hourlyRate} onChange={function(e){setNewStaff(function(p){return Object.assign({},p,{hourlyRate:e.target.value});})}}/></div>}
-          <div style={{display:"flex",gap:8}}><button style={mb(true)} onClick={saveStaff}>Add</button><button style={mb(false)} onClick={function(){setAddStaffOpen(false);}}>Cancel</button></div>
-        </Modal>}
-      </div>
-    );
-  }
-
-  // ── VET / NURSE ───────────────────────────────────────────────
-  if (user.role==="vet"||user.role==="nurse") {
-    const nameList = user.role==="vet"?VETS:NURSES;
-    const tStr = today.toDateString();
-    const tds = dayShifts(today.getDate(),today.getMonth(),today.getFullYear());
-    const pendEvs = clocks.filter(function(c){
-      if(c.approved||!c.clockOut)return false;
-      const sh=shifts.find(function(s){return s.id===c.shiftId;});
-      return sh&&new Date(sh.year,sh.month,sh.day).toDateString()===tStr;
+    var wkDays=[];for(var i=0;i<7;i++){var d2=new Date(wkStart);d2.setDate(d2.getDate()+i);wkDays.push(d2);}
+    var nav=div({display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px"},[
+      btn("prev",false,function(){set("wkOff",state.wkOff-1);}),
+      e("span",{style:{fontWeight:"500",flex:"1",textAlign:"center",fontSize:"13px"}},[wkDays[0].toLocaleDateString("en-ZA",{day:"numeric",month:"short"})+" - "+wkDays[6].toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"})]),
+      btn("next",false,function(){set("wkOff",state.wkOff+1);})
+    ]);
+    if(state.wkOff!==0)nav.appendChild(btn("Today",false,function(){set("wkOff",0);},{fontSize:"11px"}));
+    content.appendChild(nav);
+    var grid=div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"4px"},[]);
+    wkDays.forEach(function(d3){
+      var isT=d3.toDateString()===td.toDateString();
+      var isW=d3.getDay()===0||d3.getDay()===6;
+      var ds=state.shifts.filter(function(s){return s.staffId===uid&&s.day===d3.getDate()&&s.month===d3.getMonth()&&s.year===d3.getFullYear();});
+      var cell=div({borderRadius:"10px",border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:isW?"#faf7ff":"#fff",padding:"6px 4px",minHeight:"90px"},[
+        div({textAlign:"center",marginBottom:"4px"},[
+          e("div",{style:{fontSize:"9px",color:"#888",fontWeight:"500"}},[DAYS[d3.getDay()]]),
+          e("div",{style:{fontSize:"15px",fontWeight:isT?"700":"400",color:isT?"#fff":isW?"#7C3AED":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:"26px",height:"26px",display:"flex",alignItems:"center",justifyContent:"center",margin:"2px auto 0"}},[d3.getDate()+""])
+        ])
+      ]);
+      if(ds.length===0)cell.appendChild(e("div",{style:{fontSize:"9px",color:"#ccc",textAlign:"center",marginTop:"6px"}},{},["—"]));
+      ds.forEach(function(sh){var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);cell.appendChild(div({background:col.bg,color:col.text,borderLeft:"3px solid "+col.border,borderRadius:"4px",padding:"2px 4px",fontSize:"9px",fontWeight:"500",marginBottom:"2px"},[col.label[0]+" "+sh.shiftLabel.split(" ")[0]]));});
+      grid.appendChild(cell);
     });
-
-    if (!clinician) {
-      return (
-        <div>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:16}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{background:B,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontWeight:700,fontSize:13}}>FVH</span></div>
-              <div><div style={{fontWeight:500,fontSize:14}}>Fourways Vet Hospital</div><div style={{fontSize:11,color:"#888"}}>{user.role==="vet"?"Veterinarian":"Nurse"} login</div></div>
-            </div>
-            <button style={btn(false)} onClick={logout}>Sign out</button>
-          </div>
-          <div style={{...card,textAlign:"center",padding:"20px",marginBottom:16}}>
-            <div style={{fontWeight:600,fontSize:16,marginBottom:4}}>Who are you?</div>
-            <div style={{fontSize:13,color:"#888"}}>Select your name to continue</div>
-          </div>
-          {nameList.length===0&&<div style={{...card,color:"#888",fontSize:13,textAlign:"center"}}>No names loaded yet.</div>}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(175px,1fr))",gap:8}}>
-            {nameList.map(function(name){return (
-              <button key={name} onClick={function(){setClinician(name);}} style={{background:"#fff",border:"0.5px solid #c8d0e0",borderRadius:10,padding:"14px 16px",cursor:"pointer",textAlign:"left"}}>
-                <div style={{width:32,height:32,borderRadius:"50%",background:B+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:B,marginBottom:8}}>{name[0]}</div>
-                <div style={{fontWeight:500,fontSize:13}}>{name}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:2}}>{user.role==="vet"?"Veterinarian":"Nurse"}</div>
-              </button>
-            );})}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:16}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{background:B,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontWeight:700,fontSize:13}}>FVH</span></div>
-            <div><div style={{fontWeight:500,fontSize:14}}>{clinician}</div><div style={{fontSize:11,color:"#888"}}><span style={{...tag(B),fontSize:10}}>{user.role}</span></div></div>
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <button style={{...btn(false),fontSize:12}} onClick={function(){setClinician(null);}}>Change name</button>
-            <button style={btn(false)} onClick={function(){setClinician(null);logout();}}>Sign out</button>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:6,marginBottom:16}}>
-          {["approvals","roster"].map(function(t){return <button key={t} style={btn(vetTab===t)} onClick={function(){setVetTab(t);}}>{t==="approvals"?"Approvals"+(pendEvs.length>0?" ("+pendEvs.length+")":""):"Today's Roster"}</button>;})}
-        </div>
-        {vetTab==="approvals"&&(
-          <div>
-            <div style={{fontWeight:500,marginBottom:12}}>Pending approvals</div>
-            {pendEvs.length===0&&<div style={{color:"#888",fontSize:13}}>No pending approvals</div>}
-            {pendEvs.map(function(ev){const sh=shifts.find(function(s){return s.id===ev.shiftId;});const mem=sh?staff.find(function(s){return s.id===sh.staffId;}):null;const col=sh?shiftColor(sh.shiftType,sh.year,sh.month,sh.day):SC.morning;return <div key={ev.id} style={{...card,borderLeft:"4px solid "+col.border}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontWeight:500}}>{mem&&mem.name}</div><div style={{fontSize:12,color:col.text}}>{sh&&sh.shiftLabel} - {sh&&sh.shiftTime}</div><div style={{fontSize:11,color:"#888",marginTop:2}}>In: {fmt(ev.clockIn)} - Out: {fmt(ev.clockOut)} - {calcH(ev.clockIn,ev.clockOut).toFixed(2)}h</div><div style={{fontSize:11,color:"#888",fontStyle:"italic"}}>Approving as: {clinician}</div></div><button style={{...btn(true),background:"#0f6e56",border:"none",padding:"8px 16px"}} onClick={function(){approve(ev.id,clinician);}}>Approve</button></div></div>;})}
-          </div>
-        )}
-        {vetTab==="roster"&&(
-          <div>
-            <div style={{fontWeight:500,marginBottom:12}}>Today - {today.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})}</div>
-            {tds.length===0&&<div style={{color:"#888",fontSize:13}}>No shifts today</div>}
-            {tds.map(function(sh){const m=staff.find(function(s){return s.id===sh.staffId;});const ev=clocks.find(function(c){return c.shiftId===sh.id;});const col=shiftColor(sh.shiftType,sh.year,sh.month,sh.day);return <div key={sh.id} style={{...card,display:"flex",justifyContent:"space-between",alignItems:"center",borderLeft:"4px solid "+col.border}}><div><div style={{fontWeight:500}}>{m&&m.name}</div><div style={{fontSize:12,color:col.text}}>{sh.shiftTime} - {sh.station}</div></div><div>{ev&&ev.approved?<span style={tag("#0f6e56")}>Approved</span>:ev&&ev.clockOut?<span style={tag("#378add")}>Clocked out</span>:ev&&ev.clockIn?<span style={tag("#ba7517")}>Clocked in</span>:<span style={{color:"#888",fontSize:12}}>Not clocked in</span>}</div></div>;})}
-          </div>
-        )}
-      </div>
-    );
+    content.appendChild(grid);
   }
 
-  return null;
+  if(state.recTab==="month"){
+    var dim=daysInMonth(state.vy,state.vm);
+    var fd=firstDay(state.vy,state.vm);
+    var cells=[];for(var i=0;i<fd;i++)cells.push(null);for(var d4=1;d4<=dim;d4++)cells.push(d4);
+    content.appendChild(div({display:"flex",alignItems:"center",gap:"8px",marginBottom:"14px"},[
+      btn("prev",false,function(){if(state.vm===0){set({vm:11,vy:state.vy-1});}else set("vm",state.vm-1);}),
+      e("span",{style:{fontWeight:"600",flex:"1",textAlign:"center",fontSize:"15px"}},[MONTHS[state.vm]+" "+state.vy]),
+      btn("next",false,function(){if(state.vm===11){set({vm:0,vy:state.vy+1});}else set("vm",state.vm+1);})
+    ]));
+    content.appendChild(div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"2px",marginBottom:"4px"},DAYS.map(function(d5){return e("div",{style:{textAlign:"center",fontSize:"10px",color:"#888",fontWeight:"600",padding:"4px 0"}},[d5]);})));
+    var calGrid=div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px"},[]);
+    cells.forEach(function(day){
+      if(!day){calGrid.appendChild(div({},[" "]));return;}
+      var isT=day===td.getDate()&&state.vm===td.getMonth()&&state.vy===td.getFullYear();
+      var ds=state.shifts.filter(function(s){return s.staffId===uid&&s.day===day&&s.month===state.vm&&s.year===state.vy;});
+      var cell=div({minHeight:"60px",borderRadius:"8px",border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:ds.length?"#fff":"#f8f9fc",padding:"4px",cursor:ds.length?"pointer":"default"},[
+        div({fontSize:"11px",fontWeight:isT?"700":"400",color:isT?"#fff":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:"20px",height:"20px",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:"2px"},[day+""])
+      ]);
+      ds.slice(0,2).forEach(function(sh){var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);cell.appendChild(div({background:col.bg,color:col.text,borderRadius:"3px",padding:"1px 3px",fontSize:"9px",marginBottom:"1px"},[col.label[0]]));});
+      if(ds.length)cell.addEventListener("click",function(){set("selDay",state.selDay===day?null:day);});
+      calGrid.appendChild(cell);
+    });
+    content.appendChild(calGrid);
+    if(state.selDay){
+      var sds=state.shifts.filter(function(s){return s.staffId===uid&&s.day===state.selDay&&s.month===state.vm&&s.year===state.vy;});
+      if(sds.length){
+        content.appendChild(e("div",{style:{fontWeight:"500",margin:"16px 0 8px",color:B}},[new Date(state.vy,state.vm,state.selDay).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})]));
+        sds.forEach(function(sh){content.appendChild(shiftCard(sh,false,true,function(){clockIn(sh.id);},function(){clockOut(sh.id);},null,null));});
+      }
+    }
+  }
+
+  if(state.recTab==="hours"){
+    content.appendChild(e("div",{style:{fontWeight:"500",marginBottom:"12px"}},["Hours this month"]));
+    content.appendChild(div({display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"16px"},[
+      div({background:"#f0f3fa",borderRadius:"8px",padding:"12px 14px"},[e("div",{style:{fontSize:"11px",color:"#888"}},["Shifts"]),e("div",{style:{fontSize:"26px",fontWeight:"500",color:B}},[thisMon.length+""])]),
+      div({background:"#f0f3fa",borderRadius:"8px",padding:"12px 14px"},[e("div",{style:{fontSize:"11px",color:"#888"}},["Hours worked"]),e("div",{style:{fontSize:"26px",fontWeight:"500",color:B}},[totH.toFixed(2)])])
+    ]));
+    var tbl=e("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:"13px"}},[]);
+    var thead=e("tr",{style:{borderBottom:"0.5px solid #dde3ee"}},[]);
+    ["Date","Shift","In","Out","Hours","Status"].forEach(function(h){thead.appendChild(e("th",{style:{textAlign:"left",padding:"6px 8px",fontSize:"11px",color:"#888",fontWeight:"500"}},[h]));});
+    tbl.appendChild(e("thead",{},[thead]));
+    var tbody=e("tbody",{},[]);
+    thisMon.forEach(function(sh){
+      var ev=state.clocks.find(function(c){return c.shiftId===sh.id;});
+      var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);
+      var tr=e("tr",{style:{borderBottom:"0.5px solid #eee"}},[]);
+      [new Date(sh.year,sh.month,sh.day).toLocaleDateString("en-ZA",{day:"numeric",month:"short"}),sh.shiftLabel,ev&&ev.clockIn?fmt(ev.clockIn):"-",ev&&ev.clockOut?fmt(ev.clockOut):"-",ev&&ev.clockOut?calcH(ev.clockIn,ev.clockOut).toFixed(2):"-"].forEach(function(val,i){var td2=e("td",{style:{padding:"7px 8px",fontSize:i===1?"12px":"13px",color:i===1?col.text:"inherit"}},[val+""]);tr.appendChild(td2);});
+      var statTd=e("td",{style:{padding:"7px 8px"}},[]);
+      if(ev&&ev.approved)statTd.appendChild(tag("#0f6e56","Approved"));
+      else if(ev&&ev.clockOut)statTd.appendChild(tag("#378add","Pending"));
+      else statTd.appendChild(e("span",{style:{color:"#aaa",fontSize:"11px"}},["-"]));
+      tr.appendChild(statTd);tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    content.appendChild(cardEl([tbl]));
+  }
+
+  if(state.recTab==="rules"){
+    content.appendChild(e("div",{style:{fontWeight:"500",marginBottom:"12px"}},["Rules and Protocols"]));
+    state.rules.forEach(function(r){content.appendChild(cardEl([e("div",{style:{fontWeight:"500",marginBottom:"6px",color:B}},[r.title]),e("div",{style:{fontSize:"13px",whiteSpace:"pre-wrap",lineHeight:"1.6"}},[r.content])],{borderLeft:"4px solid "+B}));});
+  }
+
+  app.appendChild(content);
 }
 
-ReactDOM.render(React.createElement(App, null), document.getElementById("root"));
+// ── ADMIN ────────────────────────────────────────────────────────
+function renderAdmin(app){
+  var td=new Date();
+  app.appendChild(hdr());
+  app.appendChild(tabs(["dashboard","calendar","shifts","payroll","staff","rules"],state.adminTab,function(t){set("adminTab",t);}));
+  var content=div({});
+
+  if(state.adminTab==="dashboard"){
+    var tds=state.shifts.filter(function(s){return s.day===td.getDate()&&s.month===td.getMonth()&&s.year===td.getFullYear();});
+    var recs=state.staff.filter(function(s){return s.role==="receptionist";});
+    var pend=state.clocks.filter(function(c){return c.clockOut&&!c.approved;}).length;
+    content.appendChild(div({display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"10px",marginBottom:"16px"},[
+      ["Staff",recs.length],["Today",tds.length],["Approvals",pend],["Month",state.shifts.filter(function(s){return s.month===td.getMonth()&&s.year===td.getFullYear();}).length]
+    ].map(function(x){return div({background:"#f0f3fa",borderRadius:"8px",padding:"12px 14px"},[e("div",{style:{fontSize:"26px",fontWeight:"500",color:B}},[x[1]+""]),e("div",{style:{fontSize:"11px",color:"#888"}},[x[0]])]);})));
+    var dc=cardEl([e("div",{style:{fontWeight:"500",marginBottom:"10px"}},["Today - "+td.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})])]);
+    if(tds.length===0)dc.appendChild(e("div",{style:{color:"#888",fontSize:"13px"}},["No shifts today"]));
+    tds.forEach(function(sh){var m=state.staff.find(function(s){return s.id===sh.staffId;});var ev=state.clocks.find(function(c){return c.shiftId===sh.id;});var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);var row=div({display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"0.5px solid #eee",fontSize:"13px"},[e("span",{style:{fontWeight:"500"}},[m?m.name:"?"]),e("span",{style:{color:col.text,fontSize:"12px"}},[col.label+" - "+sh.shiftTime]),ev&&ev.approved?tag("#0f6e56","Approved"):ev&&ev.clockOut?tag("#378add","Out"):ev&&ev.clockIn?tag("#ba7517","In"):e("span",{style:{color:"#aaa"}},{},["—"])]);dc.appendChild(row);});
+    content.appendChild(dc);
+  }
+
+  if(state.adminTab==="calendar"){
+    var dim=daysInMonth(state.vy,state.vm);var fd=firstDay(state.vy,state.vm);
+    var cells=[];for(var i=0;i<fd;i++)cells.push(null);for(var d4=1;d4<=dim;d4++)cells.push(d4);
+    var calCard=cardEl([
+      div({display:"flex",alignItems:"center",gap:"8px",marginBottom:"12px"},[
+        btn("prev",false,function(){if(state.vm===0){set({vm:11,vy:state.vy-1});}else set("vm",state.vm-1);}),
+        e("span",{style:{fontWeight:"500",flex:"1",textAlign:"center"}},[MONTHS[state.vm]+" "+state.vy]),
+        btn("next",false,function(){if(state.vm===11){set({vm:0,vy:state.vy+1});}else set("vm",state.vm+1);})
+      ]),
+      div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"2px",marginBottom:"4px"},DAYS.map(function(d5){return e("div",{style:{textAlign:"center",fontSize:"11px",color:"#888",padding:"4px 0",fontWeight:"500"}},[d5]);}))
+    ]);
+    var cg=div({display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"4px"},[]);
+    cells.forEach(function(day){
+      if(!day){cg.appendChild(div({},[" "]));return;}
+      var isT=day===td.getDate()&&state.vm===td.getMonth()&&state.vy===td.getFullYear();
+      var ds=state.shifts.filter(function(s){return s.day===day&&s.month===state.vm&&s.year===state.vy;});
+      var cell=div({minHeight:"80px",borderRadius:"10px",border:isT?"2px solid "+B:"0.5px solid #dde3ee",background:state.selDay===day?"#e8eef7":"#fff",padding:"6px 8px",cursor:"pointer"},[
+        div({fontSize:"12px",fontWeight:isT?"700":"400",color:isT?"#fff":"#1a1a2e",background:isT?B:"transparent",borderRadius:"50%",width:"24px",height:"24px",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:"4px"},[day+""])
+      ]);
+      ds.slice(0,2).forEach(function(sh){var m=state.staff.find(function(s){return s.id===sh.staffId;});var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);cell.appendChild(div({fontSize:"9px",background:col.bg,color:col.text,borderRadius:"3px",padding:"2px 4px",marginTop:"2px",overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"},[m?m.name:"?"]));});
+      if(ds.length>2)cell.appendChild(div({fontSize:"9px",color:"#aaa",marginTop:"2px"},["+"+(ds.length-2)]));
+      cell.addEventListener("click",function(){set("selDay",day);});
+      cg.appendChild(cell);
+    });
+    calCard.appendChild(cg);
+    content.appendChild(calCard);
+
+    var detCard=cardEl([]);
+    if(!state.selDay){detCard.appendChild(e("div",{style:{color:"#888",fontSize:"13px",textAlign:"center",padding:"12px 0"}},["Select a day to view shifts"]));}
+    else{
+      var sds=state.shifts.filter(function(s){return s.day===state.selDay&&s.month===state.vm&&s.year===state.vy;});
+      var ssbs=state.standbys.filter(function(s){return s.day===state.selDay&&s.month===state.vm&&s.year===state.vy;});
+      detCard.appendChild(e("div",{style:{fontWeight:"500",marginBottom:"10px",color:B}},[new Date(state.vy,state.vm,state.selDay).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})]));
+      if(sds.length===0&&ssbs.length===0)detCard.appendChild(e("div",{style:{fontSize:"13px",color:"#888"}},["No shifts allocated"]));
+      sds.forEach(function(sh){detCard.appendChild(shiftCard(sh,true,false,null,null,function(){set({reallocMod:sh,reallocTo:""}); },function(){delShift(sh.id);}));});
+      ssbs.forEach(function(sb){var mem=state.staff.find(function(s){return s.id===sb.staffId;});var sbc=div({background:SBC.bg,border:"1px solid "+SBC.border,borderRadius:"10px",padding:"10px 12px",marginBottom:"8px",display:"flex",justifyContent:"space-between",alignItems:"center"},[div({},[e("div",{style:{fontWeight:"500",color:SBC.text}},["Standby - "+(mem?mem.name:"?")])]),btn("Remove",false,function(){delSB(sb.id);},{fontSize:"11px",color:"#c0392b"})]);detCard.appendChild(sbc);});
+      var abts=div({display:"flex",gap:"8px",marginTop:"10px"},[btn("+ Add Shift",true,function(){set({shiftMod:{day:state.selDay,month:state.vm,year:state.vy}});}),e("button",{className:"btn",onclick:function(){set({sbMod:{day:state.selDay,month:state.vm,year:state.vy}});},style:{background:SBC.bg,color:SBC.text,border:"1px solid "+SBC.border}},["+ Add Standby"])]);
+      detCard.appendChild(abts);
+    }
+    content.appendChild(detCard);
+  }
+
+  if(state.adminTab==="shifts"){
+    var recs=state.staff.filter(function(s){return s.role==="receptionist";});
+    content.appendChild(div({display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"},[
+      tabs([{id:"roster",label:"Roster"},{id:"reallocate",label:"Reallocate"}],state.subTab,function(t){set("subTab",t);}),
+      div({display:"flex",gap:"6px"},[btn("+ Shift",true,function(){set({shiftMod:{day:td.getDate(),month:td.getMonth(),year:td.getFullYear()}});}),e("button",{className:"btn",onclick:function(){set({sbMod:{day:td.getDate(),month:td.getMonth(),year:td.getFullYear()}});},style:{background:SBC.bg,color:SBC.text,border:"1px solid "+SBC.border}},["+ Standby"])])
+    ]));
+    var sorted=state.shifts.slice().sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);});
+    var grouped={};
+    sorted.forEach(function(sh){var k=sh.year+"-"+sh.month+"-"+sh.day;if(!grouped[k])grouped[k]={year:sh.year,month:sh.month,day:sh.day,shifts:[]};grouped[k].shifts.push(sh);});
+    state.standbys.forEach(function(sb){var k=sb.year+"-"+sb.month+"-"+sb.day;if(!grouped[k])grouped[k]={year:sb.year,month:sb.month,day:sb.day,shifts:[]};});
+    if(Object.keys(grouped).length===0)content.appendChild(e("div",{style:{color:"#888",fontSize:"13px"}},["No shifts yet."]));
+    Object.values(grouped).sort(function(a,b){return new Date(a.year,a.month,a.day)-new Date(b.year,b.month,b.day);}).forEach(function(g){
+      var k=g.year+"-"+g.month+"-"+g.day;
+      var isT=g.day===td.getDate()&&g.month===td.getMonth()&&g.year===td.getFullYear();
+      var sbs=state.standbys.filter(function(s){return s.day===g.day&&s.month===g.month&&s.year===g.year;});
+      var grp=div({marginBottom:"20px"},[
+        div({display:"flex",alignItems:"center",gap:"8px",marginBottom:"8px"},[
+          e("div",{style:{fontWeight:"600",fontSize:"13px",color:isT?B:"#1a1a2e"}},[new Date(g.year,g.month,g.day).toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long",year:"numeric"})]),
+          isT?tag(B,"Today"):null,
+          div({flex:"1",height:"0.5px",background:"#dde3ee"},{}),
+          e("span",{style:{fontSize:"11px",color:"#888"}},[g.shifts.length+" shift"+(g.shifts.length!==1?"s":"")+(sbs.length>0?" + "+sbs.length+" SB":"")])
+        ].filter(Boolean))
+      ]);
+      if(state.subTab==="roster"){
+        var rg=div({display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"8px"},[]);
+        g.shifts.forEach(function(sh){var m=state.staff.find(function(s){return s.id===sh.staffId;});var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);var ev=state.clocks.find(function(c){return c.shiftId===sh.id;});var sc=div({background:col.bg,borderRadius:"10px",padding:"10px 12px",borderLeft:"4px solid "+col.border},[e("div",{style:{fontWeight:"600",fontSize:"13px",color:col.text}},[m?m.name:"?"]),e("div",{style:{fontSize:"11px",color:col.text,opacity:"0.85",marginTop:"2px"}},[col.label+" - "+sh.shiftLabel]),e("div",{style:{fontSize:"11px",color:col.text,opacity:"0.75"}},[sh.shiftTime]),e("div",{style:{fontSize:"10px",color:col.text,opacity:"0.65",marginTop:"2px"}},[sh.station+(sh.recurring?" *":"")])]);if(ev){var st=div({marginTop:"4px"},[]);if(ev.approved)st.appendChild(e("span",{style:{fontSize:"10px",background:"rgba(16,185,129,0.2)",color:"#065F46",borderRadius:"4px",padding:"2px 6px"}},["Approved"]));else if(ev.clockOut)st.appendChild(e("span",{style:{fontSize:"10px",background:"rgba(55,138,221,0.2)",color:"#185FA5",borderRadius:"4px",padding:"2px 6px"}},["Out"]));else if(ev.clockIn)st.appendChild(e("span",{style:{fontSize:"10px",background:"rgba(186,117,23,0.2)",color:"#92400E",borderRadius:"4px",padding:"2px 6px"}},["In"]));sc.appendChild(st);}rg.appendChild(sc);});
+        sbs.forEach(function(sb){var m=state.staff.find(function(s){return s.id===sb.staffId;});rg.appendChild(div({background:SBC.bg,borderRadius:"10px",padding:"10px 12px",borderLeft:"4px solid "+SBC.border},[e("div",{style:{fontWeight:"600",fontSize:"13px",color:SBC.text}},[m?m.name:"?"]),e("div",{style:{fontSize:"11px",color:SBC.text,opacity:"0.85",marginTop:"2px"}},["Standby"])]));});
+        grp.appendChild(rg);
+      }else{
+        g.shifts.forEach(function(sh){grp.appendChild(shiftCard(sh,true,false,null,null,function(){set({reallocMod:sh,reallocTo:""});},function(){delShift(sh.id);}));});
+        sbs.forEach(function(sb){var m=state.staff.find(function(s){return s.id===sb.staffId;});grp.appendChild(div({background:SBC.bg,border:"1px solid "+SBC.border,borderRadius:"10px",padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"},[e("div",{style:{fontWeight:"500",color:SBC.text}},["Standby - "+(m?m.name:"?")]),btn("Remove",false,function(){delSB(sb.id);},{fontSize:"11px",color:"#c0392b"})]));});
+      }
+      content.appendChild(grp);
+    });
+  }
+
+  if(state.adminTab==="payroll"){
+    var recs=state.staff.filter(function(s){return s.role==="receptionist";});
+    var pmn=new Date(state.payY,state.payM,1).toLocaleString("en-ZA",{month:"long",year:"numeric"});
+    content.appendChild(div({display:"flex",alignItems:"center",gap:"8px",marginBottom:"16px"},[
+      btn("prev",false,function(){if(state.payM===0){set({payM:11,payY:state.payY-1});}else set("payM",state.payM-1);}),
+      e("span",{style:{fontWeight:"500"}},[pmn]),
+      btn("next",false,function(){if(state.payM===11){set({payM:0,payY:state.payY+1});}else set("payM",state.payM+1);})
+    ]));
+    var pd=recs.map(function(r){var ms=state.shifts.filter(function(s){return s.staffId===r.id&&s.month===state.payM&&s.year===state.payY;});var h=0;ms.forEach(function(sh){var ev=state.clocks.find(function(c){return c.shiftId===sh.id&&c.clockOut;});if(ev)h+=calcH(ev.clockIn,ev.clockOut);});return {id:r.id,name:r.name,cnt:ms.length,hrs:Math.round(h*100)/100,rate:r.hourlyRate,pay:Math.round(h*r.hourlyRate*100)/100};});
+    var tbl=e("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:"13px"}},[]);
+    var thead=e("tr",{style:{borderBottom:"0.5px solid #dde3ee"}},[]);
+    ["Name","Shifts","Hours","Rate","Total Pay"].forEach(function(h){thead.appendChild(e("th",{style:{textAlign:"left",padding:"6px 8px",fontSize:"11px",color:"#888",fontWeight:"500"}},[h]));});
+    tbl.appendChild(e("thead",{},[thead]));
+    var tbody=e("tbody",{},[]);
+    pd.forEach(function(r){var tr=e("tr",{style:{borderBottom:"0.5px solid #eee"}},[]);[r.name,r.cnt,r.hrs.toFixed(2),"R "+r.rate.toFixed(2)].forEach(function(v,i){tr.appendChild(e("td",{style:{padding:"8px",fontWeight:i===0?"500":"400"}},[v+""]));});var td2=e("td",{style:{padding:"8px",fontWeight:"500",color:B}},["R "+r.pay.toFixed(2)]);tr.appendChild(td2);tbody.appendChild(tr);});
+    var totHrs=pd.reduce(function(a,r){return a+r.hrs;},0);var totPay=pd.reduce(function(a,r){return a+r.pay;},0);
+    var tfr=e("tr",{style:{borderTop:"1.5px solid "+B}},[]);[["Total","",""],["","",""+totHrs.toFixed(2)],["","",""],["","","R "+totPay.toFixed(2)]].forEach(function(v,i){tfr.appendChild(e("td",{style:{padding:"8px",fontWeight:"500",color:i===3?B:"inherit"}},[v[2]]));});
+    tbl.appendChild(tbody);tbl.appendChild(e("tfoot",{},[tfr]));
+    content.appendChild(cardEl([tbl]));
+    content.appendChild(btn("Download CSV",true,function(){
+      var rows=[["Name","Shifts","Hours","Rate","Total Pay"]].concat(pd.map(function(r){return [r.name,r.cnt,r.hrs.toFixed(2),r.rate.toFixed(2),r.pay.toFixed(2)];})).concat([["TOTAL","",totHrs.toFixed(2),"",totPay.toFixed(2)]]);
+      var csv=rows.map(function(r){return r.map(function(v){return '"'+v+'"';}).join(",");}).join("\n");
+      var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="FVH_Payroll_"+pmn.replace(" ","_")+".csv";a.click();URL.revokeObjectURL(url);
+    },{marginTop:"14px",padding:"10px 20px"}));
+  }
+
+  if(state.adminTab==="staff"){
+    var recs=state.staff.filter(function(s){return s.role==="receptionist";});
+    content.appendChild(div({display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"},[e("div",{style:{fontWeight:"500"}},["Staff profiles"]),btn("+ Add Staff",true,function(){set("addStaffOpen",true);})]));
+    state.staff.forEach(function(m){
+      var sc=cardEl([div({display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px",flexWrap:"wrap"},[
+        div({display:"flex",alignItems:"center",gap:"10px"},[
+          div({width:"36px",height:"36px",borderRadius:"50%",background:B+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:"500",color:B},[m.name[0]]),
+          div({},[e("div",{style:{fontWeight:"500",fontSize:"14px"}},[m.name]),tag(B,m.role)])
+        ])
+      ])],{padding:"12px 16px"});
+      if(m.role==="receptionist"){
+        var actions=div({display:"flex",alignItems:"center",gap:"8px"},[]);
+        if(state.editRateId===m.id){
+          actions.appendChild(e("span",{style:{fontSize:"13px",color:"#888"}},["R"]));
+          var ri=inp(state.editRateVal,function(v){state.editRateVal=v;},"number","");ri.style.width="80px";ri.style.padding="5px 8px";actions.appendChild(ri);
+          actions.appendChild(e("span",{style:{fontSize:"13px",color:"#888"}},{},["/ hr"]));
+          actions.appendChild(btn("Save",true,function(){saveRate(m.id);},{padding:"5px 12px",fontSize:"12px"}));
+          actions.appendChild(btn("Cancel",false,function(){set({editRateId:null});},{padding:"5px 12px",fontSize:"12px"}));
+        }else{
+          actions.appendChild(e("span",{style:{fontSize:"14px",fontWeight:"500",color:B}},["R "+m.hourlyRate+"/hr"]));
+          actions.appendChild(btn("Edit rate",false,function(){set({editRateId:m.id,editRateVal:m.hourlyRate});},{padding:"5px 12px",fontSize:"12px"}));
+        }
+        actions.appendChild(btn("Delete",false,function(){delStaff(m.id);},{padding:"5px 10px",fontSize:"12px",color:"#c0392b"}));
+        sc.firstChild.appendChild(actions);
+      }
+      content.appendChild(sc);
+    });
+  }
+
+  if(state.adminTab==="rules"){
+    content.appendChild(div({display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"},[e("div",{style:{fontWeight:"500"}},["Rules and Protocols"]),btn("+ Add Rule",true,function(){set({ruleMod:"new",newRule:{title:"",content:""}});})]));
+    state.rules.forEach(function(r){
+      content.appendChild(cardEl([
+        div({display:"flex",justifyContent:"space-between",marginBottom:"6px"},[e("div",{style:{fontWeight:"500"}},[r.title]),div({display:"flex",gap:"6px"},[btn("Edit",false,function(){set({ruleMod:r.id,newRule:{title:r.title,content:r.content}});},{fontSize:"11px",padding:"4px 8px"}),btn("Delete",false,function(){delRule(r.id);},{fontSize:"11px",padding:"4px 8px",color:"#c0392b"})])]),
+        e("div",{style:{fontSize:"12px",color:"#666",whiteSpace:"pre-wrap",lineHeight:"1.6"}},[r.content])
+      ],{borderLeft:"4px solid "+B}));
+    });
+  }
+
+  app.appendChild(content);
+
+  // Modals
+  var recs2=state.staff.filter(function(s){return s.role==="receptionist";});
+  if(state.shiftMod){
+    var mod=modalEl("Add shift - "+new Date(state.shiftMod.year,state.shiftMod.month,state.shiftMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"}),[
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Staff member"]),
+      sel(state.newShift.staffId,[{value:"",label:"Select..."}].concat(recs2.map(function(r){return {value:r.id,label:r.name};})),function(v){state.newShift.staffId=v;},true),
+      e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Shift type"]),
+      sel(state.newShift.shiftType,SHIFT_TYPES.map(function(t){return {value:t.id,label:t.label+" ("+t.time+")";};}),function(v){state.newShift.shiftType=v;},true),
+      e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Station"]),
+      sel(state.newShift.station,STATIONS,function(v){state.newShift.station=v;},true),
+      e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Note"]),
+      inp(state.newShift.note,function(v){state.newShift.note=v;},"text","",true),
+      e("br",{},[]),e("br",{},[]),
+      div({display:"flex",gap:"8px"},[btn("Add Shift",true,addShift),btn("Cancel",false,function(){set({shiftMod:null});})])
+    ],function(){set({shiftMod:null});});
+    app.appendChild(mod);
+  }
+  if(state.sbMod){
+    var mod2=modalEl("Add Standby - "+new Date(state.sbMod.year,state.sbMod.month,state.sbMod.day).toLocaleDateString("en-ZA",{day:"numeric",month:"long"}),[
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Staff member"]),
+      sel(state.newSb.staffId,[{value:"",label:"Select..."}].concat(recs2.map(function(r){return {value:r.id,label:r.name};})),function(v){state.newSb.staffId=v;},true),
+      e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Note (optional)"]),
+      inp(state.newSb.note,function(v){state.newSb.note=v;},"text","",true),
+      e("br",{},[]),e("br",{},[]),
+      div({display:"flex",gap:"8px"},[btn("Confirm",true,addSB),btn("Cancel",false,function(){set({sbMod:null});})])
+    ],function(){set({sbMod:null});});
+    app.appendChild(mod2);
+  }
+  if(state.reallocMod){
+    var mod3=modalEl("Reallocate - "+state.reallocMod.shiftLabel,[
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Reassign to"]),
+      sel(state.reallocTo,[{value:"",label:"Select..."}].concat(recs2.map(function(r){return {value:r.id,label:r.name};})),function(v){state.reallocTo=v;},true),
+      e("br",{},[]),e("br",{},[]),
+      div({display:"flex",gap:"8px"},[btn("Confirm",true,doRealloc),btn("Cancel",false,function(){set({reallocMod:null});})])
+    ],function(){set({reallocMod:null});});
+    app.appendChild(mod3);
+  }
+  if(state.ruleMod){
+    var ri2=e("input",{className:"inp-dark",value:state.newRule.title});ri2.addEventListener("input",function(e2){state.newRule.title=e2.target.value;});
+    var rc=e("textarea",{className:"inp-dark",style:{height:"120px",resize:"vertical"}});rc.value=state.newRule.content;rc.addEventListener("input",function(e2){state.newRule.content=e2.target.value;});
+    var mod4=modalEl(state.ruleMod==="new"?"Add rule":"Edit rule",[
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Title"]),ri2,
+      e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Content"]),rc,
+      e("br",{},[]),e("br",{},[]),
+      div({display:"flex",gap:"8px"},[btn("Save",true,saveRule),btn("Cancel",false,function(){set({ruleMod:null});})])
+    ],function(){set({ruleMod:null});});
+    app.appendChild(mod4);
+  }
+  if(state.addStaffOpen){
+    var ni=e("input",{className:"inp-dark",placeholder:"Name"});ni.addEventListener("input",function(e2){state.newStaff.name=e2.target.value;});
+    var pi=e("input",{className:"inp-dark",type:"password",placeholder:"PIN"});pi.addEventListener("input",function(e2){state.newStaff.pin=e2.target.value;});
+    var rsel=sel(state.newStaff.role,[{value:"receptionist",label:"Receptionist"},{value:"vet",label:"Vet"},{value:"nurse",label:"Nurse"}],function(v){state.newStaff.role=v;},true);
+    var mod5=modalEl("Add new staff member",[
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Name"]),ni,e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["PIN"]),pi,e("br",{},[]),e("br",{},[]),
+      e("label",{style:{fontSize:"12px",color:"rgba(255,255,255,0.75)",display:"block",marginBottom:"4px"}},["Role"]),rsel,e("br",{},[]),e("br",{},[]),
+      div({display:"flex",gap:"8px"},[btn("Add",true,saveStaff),btn("Cancel",false,function(){set({addStaffOpen:false});})])
+    ],function(){set({addStaffOpen:false});});
+    app.appendChild(mod5);
+  }
+}
+
+// ── VET/NURSE ────────────────────────────────────────────────────
+function renderVet(app){
+  var td=new Date();
+  var nameList=state.user.role==="vet"?VETS:NURSES;
+
+  if(!state.clinician){
+    app.appendChild(div({display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:"16px"},[
+      div({display:"flex",alignItems:"center",gap:"10px"},[div({background:B,borderRadius:"8px",width:"38px",height:"38px",display:"flex",alignItems:"center",justifyContent:"center"},[e("span",{style:{color:"#fff",fontWeight:"700",fontSize:"13px"}},["FVH"])]),e("div",{style:{fontWeight:"500",fontSize:"14px"}},[state.user.role==="vet"?"Veterinarian Login":"Nurse Login"])]),
+      btn("Sign out",false,logout)
+    ]));
+    app.appendChild(cardEl([e("div",{style:{fontWeight:"600",fontSize:"16px",marginBottom:"4px"}},["Who are you?"]),e("div",{style:{fontSize:"13px",color:"#888"}},["Select your name to continue"])],{textAlign:"center",padding:"20px",marginBottom:"16px"}));
+    if(nameList.length===0){app.appendChild(e("div",{style:{color:"#888",fontSize:"13px",textAlign:"center"}},["No names loaded yet."]));return;}
+    var grid=div({display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(175px,1fr))",gap:"8px"},[]);
+    nameList.forEach(function(name){
+      var card=e("button",{style:{background:"#fff",border:"0.5px solid #c8d0e0",borderRadius:"10px",padding:"14px 16px",cursor:"pointer",textAlign:"left"}},[
+        div({width:"32px",height:"32px",borderRadius:"50%",background:B+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:"700",color:B,marginBottom:"8px"},[name[0]]),
+        e("div",{style:{fontWeight:"500",fontSize:"13px"}},[name]),
+        e("div",{style:{fontSize:"11px",color:"#888",marginTop:"2px"}},[state.user.role==="vet"?"Veterinarian":"Nurse"])
+      ]);
+      card.addEventListener("click",function(){set("clinician",name);});
+      grid.appendChild(card);
+    });
+    app.appendChild(grid);
+    return;
+  }
+
+  app.appendChild(div({display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0 16px",borderBottom:"0.5px solid #dde3ee",marginBottom:"16px"},[
+    div({display:"flex",alignItems:"center",gap:"10px"},[div({background:B,borderRadius:"8px",width:"38px",height:"38px",display:"flex",alignItems:"center",justifyContent:"center"},[e("span",{style:{color:"#fff",fontWeight:"700",fontSize:"13px"}},["FVH"])]),div({},[e("div",{style:{fontWeight:"500",fontSize:"14px"}},[state.clinician]),tag(B,state.user.role)])]),
+    div({display:"flex",gap:"8px"},[btn("Change name",false,function(){set("clinician",null);}),btn("Sign out",false,logout)])
+  ]));
+
+  var tds=state.shifts.filter(function(s){return s.day===td.getDate()&&s.month===td.getMonth()&&s.year===td.getFullYear();});
+  var tStr=td.toDateString();
+  var pendEvs=state.clocks.filter(function(c){if(c.approved||!c.clockOut)return false;var sh=state.shifts.find(function(s){return s.id===c.shiftId;});return sh&&new Date(sh.year,sh.month,sh.day).toDateString()===tStr;});
+
+  app.appendChild(tabs([{id:"approvals",label:"Approvals"+(pendEvs.length>0?" ("+pendEvs.length+")":"")},{id:"roster",label:"Today's Roster"}],state.vetTab,function(t){set("vetTab",t);}));
+
+  if(state.vetTab==="approvals"){
+    app.appendChild(e("div",{style:{fontWeight:"500",marginBottom:"12px"}},["Pending approvals"]));
+    if(pendEvs.length===0)app.appendChild(e("div",{style:{color:"#888",fontSize:"13px"}},["No pending approvals"]));
+    pendEvs.forEach(function(ev){
+      var sh=state.shifts.find(function(s){return s.id===ev.shiftId;});
+      var mem=sh?state.staff.find(function(s){return s.id===sh.staffId;}):null;
+      var col=sh?shiftCol(sh.shiftType,sh.year,sh.month,sh.day):SC.morning;
+      app.appendChild(cardEl([div({display:"flex",justifyContent:"space-between",alignItems:"center"},[
+        div({},[e("div",{style:{fontWeight:"500"}},[mem?mem.name:"?"]),e("div",{style:{fontSize:"12px",color:col.text}},[sh?sh.shiftLabel+" - "+sh.shiftTime:""]),e("div",{style:{fontSize:"11px",color:"#888",marginTop:"2px"}},["In: "+fmt(ev.clockIn)+" | Out: "+fmt(ev.clockOut)+" | "+calcH(ev.clockIn,ev.clockOut).toFixed(2)+"h"]),e("div",{style:{fontSize:"11px",color:"#888",fontStyle:"italic"}},["Approving as: "+state.clinician])]),
+        btn("Approve",true,function(){approveEv(ev.id,state.clinician);},{background:"#0f6e56",border:"none",padding:"8px 16px"})
+      ])],{borderLeft:"4px solid "+col.border}));
+    });
+  }
+
+  if(state.vetTab==="roster"){
+    app.appendChild(e("div",{style:{fontWeight:"500",marginBottom:"12px"}},["Today - "+td.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"long"})]));
+    if(tds.length===0)app.appendChild(e("div",{style:{color:"#888",fontSize:"13px"}},["No shifts today"]));
+    tds.forEach(function(sh){
+      var m=state.staff.find(function(s){return s.id===sh.staffId;});
+      var ev=state.clocks.find(function(c){return c.shiftId===sh.id;});
+      var col=shiftCol(sh.shiftType,sh.year,sh.month,sh.day);
+      app.appendChild(cardEl([div({display:"flex",justifyContent:"space-between",alignItems:"center"},[
+        div({},[e("div",{style:{fontWeight:"500"}},[m?m.name:"?"]),e("div",{style:{fontSize:"12px",color:col.text}},[sh.shiftTime+" - "+sh.station])]),
+        ev&&ev.approved?tag("#0f6e56","Approved"):ev&&ev.clockOut?tag("#378add","Clocked out"):ev&&ev.clockIn?tag("#ba7517","Clocked in"):e("span",{style:{color:"#888",fontSize:"12px"}},["Not clocked in"])
+      ])],{borderLeft:"4px solid "+col.border}));
+    });
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+initFirebase();
 </script>
 </body>
 </html>
